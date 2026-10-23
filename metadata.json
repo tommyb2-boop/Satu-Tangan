@@ -1,0 +1,6 @@
+{
+  "name": "Satu Tangan - Aplikasi Operator Pendidikan",
+  "description": "Semua kebutuhan pengajar dalam mengolah data siswa dapat diselesaikan secara terpusat dalam satu aplikasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
