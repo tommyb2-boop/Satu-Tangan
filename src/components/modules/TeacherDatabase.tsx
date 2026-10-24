@@ -1,0 +1,460 @@
+import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
+import { Teacher } from '../../types';
+import { 
+  Users, 
+  Plus, 
+  Search, 
+  Edit3, 
+  Trash2, 
+  ArrowLeft, 
+  Mail, 
+  Phone, 
+  Check, 
+  X, 
+  GraduationCap, 
+  Briefcase,
+  AlertCircle
+} from 'lucide-react';
+
+export const TeacherDatabaseModule: React.FC = () => {
+  const { teachers, addTeacher, updateTeacher, deleteTeacher, setActiveTab } = useApp();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+
+  // Modal State for Add / Edit
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTeacherId, setEditingTeacherId] = useState<string | null>(null);
+
+  // Form State
+  const [formData, setFormData] = useState<Omit<Teacher, 'id'>>({
+    nip: '',
+    name: '',
+    subject: '',
+    email: '',
+    phone: '',
+    employmentStatus: 'PNS',
+    gender: 'Laki-laki',
+    assignedClass: ''
+  });
+  const [formError, setFormError] = useState('');
+
+  // Metrics
+  const pnsCount = teachers.filter(t => t.employmentStatus === 'PNS').length;
+  const pppkCount = teachers.filter(t => t.employmentStatus === 'PPPK').length;
+  const honorerCount = teachers.filter(t => t.employmentStatus === 'Honorer' || t.employmentStatus === 'Yayasan').length;
+
+  const filteredTeachers = teachers.filter(t => {
+    const matchesSearch = 
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.nip.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.subject.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    if (filterStatus !== 'ALL' && t.employmentStatus !== filterStatus) return false;
+
+    return true;
+  });
+
+  const handleOpenAddModal = () => {
+    setEditingTeacherId(null);
+    setFormData({
+      nip: '',
+      name: '',
+      subject: '',
+      email: '',
+      phone: '',
+      employmentStatus: 'PNS',
+      gender: 'Laki-laki',
+      assignedClass: ''
+    });
+    setFormError('');
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (teacher: Teacher) => {
+    setEditingTeacherId(teacher.id);
+    setFormData({
+      nip: teacher.nip,
+      name: teacher.name,
+      subject: teacher.subject,
+      email: teacher.email,
+      phone: teacher.phone,
+      employmentStatus: teacher.employmentStatus,
+      gender: teacher.gender,
+      assignedClass: teacher.assignedClass || ''
+    });
+    setFormError('');
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus data pendidik "${name}" dari database?`)) {
+      deleteTeacher(id);
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.nip.trim() || !formData.subject.trim()) {
+      setFormError('Nama lengkap, NIP, dan Mata Pelajaran wajib diisi.');
+      return;
+    }
+
+    if (editingTeacherId) {
+      updateTeacher(editingTeacherId, formData);
+    } else {
+      addTeacher(formData);
+    }
+
+    setIsModalOpen(false);
+  };
+
+  return (
+    <div className="space-y-6 animate-fadeIn pb-12">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+            title="Kembali ke Dashboard"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                <Users className="w-5 h-5" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Database Guru & Pendidik</h1>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+              Buku induk master data tenaga pendidik dan status kepegawaian
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleOpenAddModal}
+          className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/25 active:translate-y-0.5 transition-all flex items-center gap-2 self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Tambah Guru Baru</span>
+        </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+          <p className="text-[11px] font-medium text-slate-400">Total Guru</p>
+          <p className="text-2xl font-bold text-white mt-1">{teachers.length}</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">Aktif Mengajar</p>
+        </div>
+
+        <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40">
+          <p className="text-[11px] font-medium text-emerald-400">Status PNS</p>
+          <p className="text-2xl font-bold text-emerald-300 mt-1">{pnsCount}</p>
+          <p className="text-[10px] text-emerald-500/80 mt-0.5">Pegawai Negeri Sipil</p>
+        </div>
+
+        <div className="p-4 rounded-xl bg-blue-950/30 border border-blue-800/40">
+          <p className="text-[11px] font-medium text-blue-400">Status PPPK</p>
+          <p className="text-2xl font-bold text-blue-300 mt-1">{pppkCount}</p>
+          <p className="text-[10px] text-blue-500/80 mt-0.5">Perjanjian Kerja</p>
+        </div>
+
+        <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-800/40">
+          <p className="text-[11px] font-medium text-amber-400">Honorer / Yayasan</p>
+          <p className="text-2xl font-bold text-amber-300 mt-1">{honorerCount}</p>
+          <p className="text-[10px] text-amber-500/80 mt-0.5">Tenaga Kontrak</p>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
+          <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="bg-transparent text-white font-medium text-xs py-1 focus:outline-none"
+          >
+            <option value="ALL" className="bg-slate-900">Semua Status Kepegawaian</option>
+            <option value="PNS" className="bg-slate-900">PNS</option>
+            <option value="PPPK" className="bg-slate-900">PPPK</option>
+            <option value="Honorer" className="bg-slate-900">Honorer</option>
+            <option value="Yayasan" className="bg-slate-900">Yayasan</option>
+          </select>
+        </div>
+
+        <div className="relative min-w-[260px]">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Cari nama guru, NIP, atau mata pelajaran..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Teachers Table */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-900/90 text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-800">
+              <tr>
+                <th className="py-3 px-4">Nama Lengkap & NIP</th>
+                <th className="py-3 px-4">Mata Pelajaran & Tugas</th>
+                <th className="py-3 px-4">Status & Gender</th>
+                <th className="py-3 px-4">Kontak</th>
+                <th className="py-3 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              {filteredTeachers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                    Tidak ditemukan data guru yang sesuai dengan kriteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredTeachers.map((teacher) => (
+                  <tr key={teacher.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+                          {teacher.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white text-sm">{teacher.name}</p>
+                          <p className="text-[11px] text-slate-400 font-mono">NIP: {teacher.nip}</p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <p className="font-medium text-white">{teacher.subject}</p>
+                      {teacher.assignedClass ? (
+                        <span className="inline-block mt-0.5 text-[10px] bg-indigo-950/80 text-indigo-300 border border-indigo-800/60 px-1.5 py-0.5 rounded">
+                          Wali Kelas {teacher.assignedClass}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-slate-500">Guru Bidang Studi</span>
+                      )}
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="space-y-1">
+                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                          teacher.employmentStatus === 'PNS' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40' :
+                          teacher.employmentStatus === 'PPPK' ? 'bg-blue-950/60 text-blue-300 border-blue-500/40' :
+                          'bg-amber-950/60 text-amber-300 border-amber-500/40'
+                        }`}>
+                          {teacher.employmentStatus}
+                        </span>
+                        <p className="text-[11px] text-slate-400">{teacher.gender}</p>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="space-y-1 text-[11px] text-slate-300">
+                        {teacher.email && (
+                          <div className="flex items-center gap-1.5 text-slate-400">
+                            <Mail className="w-3 h-3 text-slate-500 shrink-0" />
+                            <span className="truncate max-w-[140px]">{teacher.email}</span>
+                          </div>
+                        )}
+                        {teacher.phone && (
+                          <div className="flex items-center gap-1.5 text-slate-400">
+                            <Phone className="w-3 h-3 text-slate-500 shrink-0" />
+                            <span>{teacher.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(teacher)}
+                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors border border-slate-700"
+                          title="Edit Biodata Guru"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(teacher.id, teacher.name)}
+                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 transition-colors border border-slate-700 hover:border-rose-800"
+                          title="Hapus Data Guru"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Add / Edit Teacher Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-400" />
+                <h2 className="text-base font-bold text-white">
+                  {editingTeacherId ? 'Ubah Data Guru' : 'Tambah Tenaga Pendidik Baru'}
+                </h2>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              {formError && (
+                <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">NIP / NUPTK *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.nip}
+                    onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
+                    placeholder="198203152006041005"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">Nama Lengkap & Gelar *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Dra. Siti Rahmah, M.Pd"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">Mata Pelajaran Utama *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    placeholder="Matematika"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">Wali Kelas (Opsional)</label>
+                  <input
+                    type="text"
+                    value={formData.assignedClass || ''}
+                    onChange={(e) => setFormData({ ...formData, assignedClass: e.target.value })}
+                    placeholder="Contoh: 7A, 8B"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">Status Kepegawaian</label>
+                  <select
+                    value={formData.employmentStatus}
+                    onChange={(e) => setFormData({ ...formData, employmentStatus: e.target.value as any })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="PNS">PNS</option>
+                    <option value="PPPK">PPPK</option>
+                    <option value="Honorer">Honorer</option>
+                    <option value="Yayasan">Yayasan</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">Jenis Kelamin</label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value as any })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="Laki-laki">Laki-laki</option>
+                    <option value="Perempuan">Perempuan</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">Email Pendidik</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="guru@sekolah.sch.id"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-medium">Nomor WhatsApp / Telp</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="081234567890"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{editingTeacherId ? 'Simpan Perubahan' : 'Tambahkan Guru'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
