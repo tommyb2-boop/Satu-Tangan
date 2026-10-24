@@ -402,9 +402,22 @@ export const StudentDatabaseModule: React.FC = () => {
                     required
                     value={formData.className}
                     onChange={(e) => setFormData({ ...formData, className: e.target.value })}
-                    placeholder="7A"
+                    placeholder="Contoh: TK-A, TK-B, 7A"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
                   />
+                  <div className="flex flex-wrap items-center gap-1 mt-1 text-[10px]">
+                    <span className="text-slate-500">Pilihan cepat:</span>
+                    {['TK-A', 'TK-B', 'KB', '7A', '7B', '8A', '9A'].map(cls => (
+                      <button
+                        type="button"
+                        key={cls}
+                        onClick={() => setFormData({ ...formData, className: cls })}
+                        className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px]"
+                      >
+                        {cls}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

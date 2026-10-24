@@ -18,7 +18,8 @@ export const INITIAL_SCHOOL_PROFILE: SchoolProfile = {
   headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
   headmasterNip: '19780512 200212 1 002',
   letterheadProvince: 'PEMERINTAH DAERAH PROVINSI JAWA BARAT',
-  letterheadAgency: 'DINAS PENDIDIKAN & KEBUDAYAAN'
+  letterheadAgency: 'DINAS PENDIDIKAN & KEBUDAYAAN',
+  logoUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="url(#g)" stroke="#fbbf24" stroke-width="4"/><circle cx="60" cy="60" r="48" fill="#0f172a" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,2"/><path d="M60 26 L90 42 L60 58 L30 42 Z" fill="#fbbf24"/><path d="M42 50 L42 70 C42 78 78 78 78 70 L78 50" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="74" r="5" fill="#38bdf8"/><path d="M60 79 L60 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/><path d="M52 92 L68 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/></svg>`)
 };
 
 export const INITIAL_OPERATOR: OperatorUser = {
@@ -404,5 +405,6 @@ export const INITIAL_REPORT_CARD: ReportCard = {
   headmasterNip: '19780512 200212 1 002',
   homeroomTeacherName: 'Siti Aminah, S.Pd., M.Si.',
   homeroomTeacherNip: '19850315 200902 2 004',
-  issueDate: '2026-12-19'
+  issueDate: '2026-12-19',
+  issueCity: 'Kota Bandung'
 };

@@ -19,6 +19,7 @@ export interface SchoolProfile {
   headmasterNip: string;
   letterheadProvince: string;
   letterheadAgency: string;
+  logoUrl?: string;
 }
 
 export interface OperatorUser {
@@ -121,6 +122,7 @@ export interface ReportCard {
   homeroomTeacherName: string;
   homeroomTeacherNip: string;
   issueDate: string;
+  issueCity?: string;
 }
 
 export type EntityFieldType = 'currency' | 'text' | 'badge' | 'date';

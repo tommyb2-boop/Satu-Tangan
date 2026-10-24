@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { SchoolProfile } from '../types';
 import { 
@@ -18,9 +18,31 @@ import {
   CheckCircle2, 
   ExternalLink,
   Sparkles,
-  Info
+  Info,
+  Image as ImageIcon,
+  Trash2,
+  Camera,
+  UploadCloud
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+const PRESET_LOGOS = [
+  {
+    id: 'kemendikbud',
+    name: 'Pendidikan Nasional (Kemendikbud)',
+    url: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="p1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="url(#p1)" stroke="#fbbf24" stroke-width="4"/><circle cx="60" cy="60" r="48" fill="#0f172a" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,2"/><path d="M60 26 L90 42 L60 58 L30 42 Z" fill="#fbbf24"/><path d="M42 50 L42 70 C42 78 78 78 78 70 L78 50" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="74" r="5" fill="#38bdf8"/><path d="M60 79 L60 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/><path d="M52 92 L68 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/></svg>`)
+  },
+  {
+    id: 'kemenag',
+    name: 'Madrasah / Kemenag',
+    url: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="p2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><polygon points="60,6 74,20 94,20 94,40 108,54 94,68 94,88 74,88 60,102 46,88 26,88 26,68 12,54 26,40 26,20 46,20" fill="url(#p2)" stroke="#f59e0b" stroke-width="3.5"/><circle cx="60" cy="54" r="34" fill="#064e3b"/><path d="M42 54 L60 40 L78 54 L60 68 Z" fill="#fef08a"/><circle cx="60" cy="54" r="7" fill="#065f46"/><path d="M46 64 C46 72 74 72 74 64" stroke="#f59e0b" stroke-width="2.5" fill="none"/></svg>`)
+  },
+  {
+    id: 'cendekia',
+    name: 'Bintang Cendekia Emas',
+    url: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="p3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#9333ea"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="url(#p3)" stroke="#facc15" stroke-width="4"/><polygon points="60,22 71,45 96,48 78,65 83,90 60,77 37,90 42,65 24,48 49,45" fill="#facc15" stroke="#ca8a04" stroke-width="2"/><circle cx="60" cy="58" r="14" fill="#1e1b4b"/><path d="M60 48 L60 68 M50 58 L70 58" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/></svg>`)
+  }
+];
 
 export const AppSettingsModal: React.FC = () => {
   const { 
@@ -43,6 +65,92 @@ export const AppSettingsModal: React.FC = () => {
   // Local form state for School Profile
   const [profileForm, setProfileForm] = useState<SchoolProfile>(schoolProfile);
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+  const [logoUploadError, setLogoUploadError] = useState('');
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync profile form when modal opens or schoolProfile changes
+  useEffect(() => {
+    if (isSettingsOpen) {
+      setProfileForm(schoolProfile);
+      setLogoUploadError('');
+    }
+  }, [schoolProfile, isSettingsOpen]);
+
+  // Handle Logo Upload (with canvas optimization for fast localStorage & crisp PDF printing)
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setLogoUploadError('');
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setLogoUploadError('Harap pilih file gambar yang valid (PNG, JPG, JPEG, SVG, WebP)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoUploadError('Ukuran file maksimal 5 MB');
+      return;
+    }
+
+    // Direct read for SVG
+    if (file.type === 'image/svg+xml') {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setProfileForm(prev => ({ ...prev, logoUrl: result }));
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // Process raster images through Canvas to limit max dimensions (400x400) and compress
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 400;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const optimizedDataUrl = canvas.toDataURL('image/png', 0.92);
+            setProfileForm(prev => ({ ...prev, logoUrl: optimizedDataUrl }));
+          } else {
+            setProfileForm(prev => ({ ...prev, logoUrl: event.target?.result as string }));
+          }
+        } catch {
+          setProfileForm(prev => ({ ...prev, logoUrl: event.target?.result as string }));
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleRemoveLogo = () => {
+    setProfileForm(prev => ({ ...prev, logoUrl: '' }));
+  };
+
+  const handleSelectPresetLogo = (presetUrl: string) => {
+    setProfileForm(prev => ({ ...prev, logoUrl: presetUrl }));
+  };
 
   // Local form state for Password
   const [oldPassword, setOldPassword] = useState('');
@@ -379,6 +487,7 @@ export const AppSettingsModal: React.FC = () => {
                         onChange={(e) => setProfileForm({ ...profileForm, educationLevel: e.target.value })}
                         className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                       >
+                        <option value="TK / PAUD">TK (Taman Kanak-kanak) / PAUD</option>
                         <option value="SD/MI">SD / MI</option>
                         <option value="SMP/MTs">SMP / MTs</option>
                         <option value="SMA/MA">SMA / MA</option>
