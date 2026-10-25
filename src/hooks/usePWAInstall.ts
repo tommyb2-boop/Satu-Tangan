@@ -9,38 +9,56 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   useEffect(() => {
-    // Check if already installed / running in standalone mode (Android PWA / WebAPK)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    // Check if already running as installed standalone PWA / Android WebAPK
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+      document.referrer.includes('android-app://');
 
     if (isStandalone) {
       setIsInstalled(true);
-      return;
     }
 
-    const handler = (e: Event) => {
+    // Detect device platform
+    const ua = navigator.userAgent.toLowerCase();
+    const isAndroidDevice = /android/.test(ua);
+    const isIOSDevice = /iphone|ipad|ipod/.test(ua);
+    setIsAndroid(isAndroidDevice);
+    setIsIOS(isIOSDevice);
+
+    const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  const promptInstall = async () => {
-    if (!deferredPrompt) return false;
+  const promptInstall = async (): Promise<boolean> => {
+    if (!deferredPrompt) {
+      // If native prompt is not available yet, open the interactive step-by-step guide
+      setShowGuideModal(true);
+      return false;
+    }
+
     try {
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
@@ -52,9 +70,18 @@ export function usePWAInstall() {
       }
       return false;
     } catch {
+      setShowGuideModal(true);
       return false;
     }
   };
 
-  return { isInstallable, isInstalled, promptInstall };
+  return {
+    isInstallable,
+    isInstalled,
+    isAndroid,
+    isIOS,
+    showGuideModal,
+    setShowGuideModal,
+    promptInstall,
+  };
 }

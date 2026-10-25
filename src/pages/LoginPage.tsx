@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { AndroidInstallModal } from '../components/AndroidInstallModal';
 import { 
   GraduationCap, 
   Lock, 
@@ -21,7 +22,13 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
   const { loginWithEmail, loginWithGitHub } = useApp();
-  const { isInstallable, promptInstall } = usePWAInstall();
+  const { 
+    isInstallable, 
+    isInstalled, 
+    showGuideModal, 
+    setShowGuideModal, 
+    promptInstall 
+  } = usePWAInstall();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   
   const [email, setEmail] = useState('operator@satutangan.sch.id');
@@ -250,13 +257,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
                 <span>Gunakan Akun Demo Otomatis</span>
               </button>
 
-              {isInstallable && (
+              {!isInstalled && (
                 <button
                   type="button"
                   onClick={promptInstall}
-                  className="w-full py-1.5 px-3 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 text-[10px] font-semibold flex items-center justify-center gap-1.5 transition-colors animate-pulse"
+                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-950/80 to-teal-950/80 hover:from-emerald-900 hover:to-teal-900 text-emerald-300 border border-emerald-600/60 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
                 >
-                  <Download className="w-3 h-3 text-emerald-400" />
+                  <Download className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
                   <span>Pasang Aplikasi di Android (PWA)</span>
                 </button>
               )}
@@ -313,6 +320,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
           </div>
         </div>
       )}
+
+      {/* Android Installation Modal Guide */}
+      <AndroidInstallModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        onNativeInstall={promptInstall}
+        isInstallable={isInstallable}
+      />
 
       {/* Bottom Footer (Single compact line) */}
       <footer className="w-full text-center text-[10px] text-slate-500 shrink-0 pb-1">

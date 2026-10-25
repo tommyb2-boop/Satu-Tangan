@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp, ActiveModule } from '../context/AppContext';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { AndroidInstallModal } from './AndroidInstallModal';
 import { 
   Boxes, 
   Fingerprint, 
@@ -15,9 +16,9 @@ import {
   RotateCcw,
   CheckCircle2,
   Database,
-  Sparkles
+  Sparkles,
+  Smartphone
 } from 'lucide-react';
-import { APP_LOGO_URL } from '../data/initialData';
 
 interface MobileBottomNavProps {
   onOpenArchitecture: () => void;
@@ -25,7 +26,13 @@ interface MobileBottomNavProps {
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitecture }) => {
   const { activeTab, setActiveTab, setIsSettingsOpen, resetDemoData, operator } = useApp();
-  const { isInstallable, promptInstall } = usePWAInstall();
+  const { 
+    isInstallable, 
+    isInstalled, 
+    showGuideModal, 
+    setShowGuideModal, 
+    promptInstall 
+  } = usePWAInstall();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const primaryTabs: { id: ActiveModule; label: string; icon: React.ReactNode }[] = [
@@ -83,14 +90,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitec
           {/* Menu Drawer Toggle Button */}
           <button
             onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all active:scale-95 touch-manipulation ${
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all active:scale-95 touch-manipulation relative ${
               isDrawerOpen
                 ? 'text-indigo-400 font-semibold'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <div className={`p-1 rounded-lg transition-colors ${isDrawerOpen ? 'bg-indigo-500/20 text-indigo-400' : ''}`}>
+            <div className={`p-1 rounded-lg transition-colors relative ${isDrawerOpen ? 'bg-indigo-500/20 text-indigo-400' : ''}`}>
               <Menu className="w-5 h-5" />
+              {!isInstalled && (
+                <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+              )}
             </div>
             <span className="text-[10px] mt-0.5 tracking-tight">Semua</span>
           </button>
@@ -109,7 +119,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitec
             <div className="p-4 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img 
-                  src={APP_LOGO_URL} 
+                  src="/pwa-192x192.png" 
                   alt="Logo" 
                   className="w-8 h-8 rounded-lg object-cover ring-1 ring-indigo-500/30" 
                 />
@@ -126,22 +136,26 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitec
               </button>
             </div>
 
-            {/* PWA Install Banner inside Drawer for Android users */}
-            {isInstallable && (
-              <div className="mx-4 mt-3 p-3 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border border-indigo-700/60 rounded-xl flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Download className="w-5 h-5 text-indigo-400 shrink-0" />
+            {/* PWA Install Banner inside Drawer for Android users (shown if not yet installed) */}
+            {!isInstalled && (
+              <div className="mx-4 mt-3 p-3 bg-gradient-to-r from-emerald-950/70 via-slate-900 to-indigo-950/70 border border-emerald-600/60 rounded-2xl flex items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-emerald-500/20 rounded-xl text-emerald-400 shrink-0">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
                   <div className="text-xs">
-                    <p className="font-semibold text-white">Pasang Aplikasi di Android</p>
-                    <p className="text-slate-300 text-[11px]">Buka instan tanpa browser, lebih ringan & cepat</p>
+                    <p className="font-bold text-white">Pasang Aplikasi di Android</p>
+                    <p className="text-slate-300 text-[11px]">Buka instan di HP Anda tanpa buka browser</p>
                   </div>
                 </div>
                 <button
                   onClick={async () => {
-                    await promptInstall();
-                    setIsDrawerOpen(false);
+                    const ok = await promptInstall();
+                    if (ok) {
+                      setIsDrawerOpen(false);
+                    }
                   }}
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm shrink-0 active:scale-95"
+                  className="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md shrink-0 active:scale-95 transition-all"
                 >
                   Pasang
                 </button>
@@ -224,6 +238,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitec
           </div>
         </div>
       )}
+
+      {/* Guide Modal for Android install steps */}
+      <AndroidInstallModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        onNativeInstall={promptInstall}
+        isInstallable={isInstallable}
+      />
     </>
   );
 };

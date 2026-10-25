@@ -12,15 +12,70 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'auto',
+        includeAssets: [
+          'favicon.ico',
+          'apple-touch-icon.png',
+          'pwa-192x192.png',
+          'pwa-512x512.png',
+          'pwa-maskable-512x512.png',
+        ],
+        manifest: {
+          id: '/',
+          name: 'Satu Tangan - Aplikasi Operator Pendidikan',
+          short_name: 'Satu Tangan',
+          description: 'Aplikasi terpusat pengolah data siswa, guru, presensi sidik jari & cetak raport praktis.',
+          theme_color: '#020617',
+          background_color: '#020617',
+          display: 'standalone',
+          orientation: 'any',
+          start_url: '/',
+          scope: '/',
+          lang: 'id',
+          icons: [
+            {
+              src: '/pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-maskable-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff,woff2}'],
           cleanupOutdatedCaches: true,
+          navigateFallback: '/index.html',
           runtimeCaching: [
             {
-              urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'google-fonts-cache',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'gstatic-fonts-cache',
                 expiration: {
                   maxEntries: 20,
                   maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
@@ -43,31 +98,9 @@ export default defineConfig(() => {
             },
           ],
         },
-        manifest: {
-          name: 'Satu Tangan - Aplikasi Operator Pendidikan',
-          short_name: 'SatuTangan',
-          description: 'Aplikasi terpusat pengolah data siswa, guru, presensi sidik jari & cetak raport praktis.',
-          theme_color: '#020617',
-          background_color: '#020617',
-          display: 'standalone',
-          orientation: 'any',
-          start_url: '/',
-          scope: '/',
-          lang: 'id',
-          icons: [
-            {
-              src: '/assets/aistudio/Gemini_Generated_Image_7fyqob7fyqob7fyq_ee286bdd.jpg',
-              sizes: '192x192',
-              type: 'image/jpeg',
-              purpose: 'any',
-            },
-            {
-              src: '/assets/aistudio/Gemini_Generated_Image_7fyqob7fyqob7fyq_ee286bdd.jpg',
-              sizes: '512x512',
-              type: 'image/jpeg',
-              purpose: 'any maskable',
-            },
-          ],
+        devOptions: {
+          enabled: true,
+          type: 'module',
         },
       }),
     ],
