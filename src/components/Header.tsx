@@ -1,17 +1,11 @@
 import React from 'react';
-import { useApp, ActiveModule } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { AndroidInstallModal } from './AndroidInstallModal';
 import { 
   LogOut, 
   FileCode2, 
-  Database,
-  CalendarCheck2,
-  Users,
-  FileSpreadsheet,
-  Boxes,
   Github,
-  Fingerprint,
   School,
   Download
 } from 'lucide-react';
@@ -22,7 +16,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
-  const { operator, logout, activeTab, setActiveTab, setIsSettingsOpen } = useApp();
+  const { operator, logout, setActiveTab, setIsSettingsOpen } = useApp();
   const { 
     isInstallable, 
     isInstalled, 
@@ -30,17 +24,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
     setShowGuideModal, 
     promptInstall 
   } = usePWAInstall();
-
-  const navItems: { id: ActiveModule; label: string; icon: React.ReactNode }[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Boxes className="w-4 h-4" /> },
-    { id: 'absen-sidik-jari', label: 'Sidik Jari', icon: <Fingerprint className="w-4 h-4 text-emerald-400" /> },
-    { id: 'absensi-guru', label: 'Presensi Guru', icon: <CalendarCheck2 className="w-4 h-4" /> },
-    { id: 'absensi-siswa', label: 'Presensi Siswa', icon: <CalendarCheck2 className="w-4 h-4" /> },
-    { id: 'db-guru', label: 'Data Guru', icon: <Users className="w-4 h-4" /> },
-    { id: 'db-siswa', label: 'Data Siswa', icon: <Database className="w-4 h-4" /> },
-    { id: 'cetak-raport', label: 'Raport PDF', icon: <FileSpreadsheet className="w-4 h-4" /> },
-    { id: 'modul-dinamis', label: 'Lain-lain', icon: <Boxes className="w-4 h-4" /> },
-  ];
 
   return (
     <>
@@ -80,28 +63,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
             </div>
           </div>
 
-          {/* Zone 2: Navigation Links (Desktop only) */}
-          <nav className="hidden xl:flex items-center gap-1">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all duration-150 ${
-                    isActive
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Zone 3: Architecture Inspector, School Profile & Operator Actions */}
+          {/* Zone 2: Architecture Inspector, School Profile & Operator Actions */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* PWA Install Button for Mobile / Android / Desktop (hidden if already installed) */}
             {!isInstalled && (
