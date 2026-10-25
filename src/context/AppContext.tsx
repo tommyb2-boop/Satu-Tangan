@@ -50,12 +50,14 @@ interface AppContextType {
   addTeacher: (teacher: Omit<Teacher, 'id'>) => void;
   updateTeacher: (id: string, teacher: Partial<Teacher>) => void;
   deleteTeacher: (id: string) => void;
+  bulkAddTeachers: (newTeachers: Omit<Teacher, 'id'>[], mode?: 'append' | 'replace') => number;
 
   // Students CRUD
   students: Student[];
   addStudent: (student: Omit<Student, 'id'>) => void;
   updateStudent: (id: string, student: Partial<Student>) => void;
   deleteStudent: (id: string) => void;
+  bulkAddStudents: (newStudents: Omit<Student, 'id'>[], mode?: 'append' | 'replace') => number;
 
   // Teacher Attendance
   teacherAttendance: TeacherAttendance[];
@@ -86,6 +88,7 @@ interface AppContextType {
   // Report Cards
   reportCards: Record<string, ReportCard>;
   saveReportCard: (report: ReportCard) => void;
+  bulkSaveReportCards: (reports: Record<string, ReportCard>) => number;
 
   // Dynamic Entities & Records
   dynamicEntities: DynamicEntity[];
@@ -124,73 +127,193 @@ interface AppContextType {
   restoreBackupData: (backupJsonString: string) => { success: boolean; message: string; stats?: { students: number; teachers: number; attendance: number; records: number } };
 }
 
+// Helper functions for fail-safe localStorage parsing
+const safeLoadOperator = (): OperatorUser | null => {
+  try {
+    const saved = localStorage.getItem('satutangan_operator');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_OPERATOR;
+    const parsed = JSON.parse(saved);
+    if (!parsed || typeof parsed !== 'object') return INITIAL_OPERATOR;
+    return { ...INITIAL_OPERATOR, ...parsed };
+  } catch (err) {
+    console.warn('Gagal memuat operator dari localStorage, menggunakan data awal:', err);
+    return INITIAL_OPERATOR;
+  }
+};
+
+const safeLoadTeachers = (): Teacher[] => {
+  try {
+    const saved = localStorage.getItem('satutangan_teachers');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_TEACHERS;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_TEACHERS;
+  } catch (err) {
+    console.warn('Gagal memuat guru dari localStorage:', err);
+    return INITIAL_TEACHERS;
+  }
+};
+
+const safeLoadStudents = (): Student[] => {
+  try {
+    const saved = localStorage.getItem('satutangan_students');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_STUDENTS;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_STUDENTS;
+  } catch (err) {
+    console.warn('Gagal memuat siswa dari localStorage:', err);
+    return INITIAL_STUDENTS;
+  }
+};
+
+const safeLoadTeacherAttendance = (): TeacherAttendance[] => {
+  try {
+    const saved = localStorage.getItem('satutangan_teacher_attendance');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_TEACHER_ATTENDANCE;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : INITIAL_TEACHER_ATTENDANCE;
+  } catch (err) {
+    console.warn('Gagal memuat presensi guru dari localStorage:', err);
+    return INITIAL_TEACHER_ATTENDANCE;
+  }
+};
+
+const safeLoadStudentAttendance = (): StudentAttendance[] => {
+  try {
+    const saved = localStorage.getItem('satutangan_student_attendance');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_STUDENT_ATTENDANCE;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : INITIAL_STUDENT_ATTENDANCE;
+  } catch (err) {
+    console.warn('Gagal memuat presensi siswa dari localStorage:', err);
+    return INITIAL_STUDENT_ATTENDANCE;
+  }
+};
+
+const safeLoadReportCards = (): Record<string, ReportCard> => {
+  try {
+    const saved = localStorage.getItem('satutangan_report_cards');
+    if (!saved || saved === 'undefined' || saved === 'null') {
+      return { 'std-01': INITIAL_REPORT_CARD };
+    }
+    const parsed = JSON.parse(saved);
+    if (!parsed || typeof parsed !== 'object') {
+      return { 'std-01': INITIAL_REPORT_CARD };
+    }
+    const normalized: Record<string, ReportCard> = {};
+    for (const key of Object.keys(parsed)) {
+      const card = parsed[key];
+      if (card && typeof card === 'object') {
+        normalized[key] = {
+          ...INITIAL_REPORT_CARD,
+          ...card,
+          scores: Array.isArray(card.scores) ? card.scores : INITIAL_REPORT_CARD.scores,
+          extracurriculars: Array.isArray(card.extracurriculars) ? card.extracurriculars : INITIAL_REPORT_CARD.extracurriculars,
+          attendanceSummary: card.attendanceSummary || INITIAL_REPORT_CARD.attendanceSummary
+        };
+      }
+    }
+    return Object.keys(normalized).length > 0 ? normalized : { 'std-01': INITIAL_REPORT_CARD };
+  } catch (err) {
+    console.warn('Gagal memuat raport dari localStorage:', err);
+    return { 'std-01': INITIAL_REPORT_CARD };
+  }
+};
+
+const safeLoadSchoolProfile = (): SchoolProfile => {
+  try {
+    const saved = localStorage.getItem('satutangan_school_profile');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_SCHOOL_PROFILE;
+    const parsed = JSON.parse(saved);
+    if (!parsed || typeof parsed !== 'object') return INITIAL_SCHOOL_PROFILE;
+    return {
+      ...INITIAL_SCHOOL_PROFILE,
+      ...parsed,
+      accreditation: parsed.accreditation || INITIAL_SCHOOL_PROFILE.accreditation,
+      letterheadProvince: parsed.letterheadProvince || INITIAL_SCHOOL_PROFILE.letterheadProvince,
+      letterheadAgency: parsed.letterheadAgency || INITIAL_SCHOOL_PROFILE.letterheadAgency,
+      logoUrl: parsed.logoUrl !== undefined ? parsed.logoUrl : INITIAL_SCHOOL_PROFILE.logoUrl,
+      schoolName: parsed.schoolName || INITIAL_SCHOOL_PROFILE.schoolName,
+      npsn: parsed.npsn || INITIAL_SCHOOL_PROFILE.npsn,
+      address: parsed.address || INITIAL_SCHOOL_PROFILE.address,
+      city: parsed.city || INITIAL_SCHOOL_PROFILE.city,
+      province: parsed.province || INITIAL_SCHOOL_PROFILE.province,
+      headmasterName: parsed.headmasterName || INITIAL_SCHOOL_PROFILE.headmasterName,
+      headmasterNip: parsed.headmasterNip || INITIAL_SCHOOL_PROFILE.headmasterNip
+    };
+  } catch (err) {
+    console.warn('Gagal memuat profil sekolah dari localStorage:', err);
+    return INITIAL_SCHOOL_PROFILE;
+  }
+};
+
+const safeLoadDynamicEntities = (): DynamicEntity[] => {
+  try {
+    const saved = localStorage.getItem('satutangan_dynamic_entities');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_DYNAMIC_ENTITIES;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : INITIAL_DYNAMIC_ENTITIES;
+  } catch (err) {
+    return INITIAL_DYNAMIC_ENTITIES;
+  }
+};
+
+const safeLoadDynamicRecords = (): DynamicRecord[] => {
+  try {
+    const saved = localStorage.getItem('satutangan_dynamic_records');
+    if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_DYNAMIC_RECORDS;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : INITIAL_DYNAMIC_RECORDS;
+  } catch (err) {
+    return INITIAL_DYNAMIC_RECORDS;
+  }
+};
+
+const safeLoadPassword = (): string => {
+  try {
+    const saved = localStorage.getItem('satutangan_operator_password');
+    return saved && typeof saved === 'string' && saved.length >= 4 ? saved : 'operator2026';
+  } catch {
+    return 'operator2026';
+  }
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Authentication
-  const [operator, setOperator] = useState<OperatorUser | null>(() => {
-    const saved = localStorage.getItem('satutangan_operator');
-    return saved ? JSON.parse(saved) : INITIAL_OPERATOR;
-  });
+  const [operator, setOperator] = useState<OperatorUser | null>(safeLoadOperator);
 
   const [activeTab, setActiveTab] = useState<ActiveModule>('dashboard');
 
   // Teachers
-  const [teachers, setTeachers] = useState<Teacher[]>(() => {
-    const saved = localStorage.getItem('satutangan_teachers');
-    return saved ? JSON.parse(saved) : INITIAL_TEACHERS;
-  });
+  const [teachers, setTeachers] = useState<Teacher[]>(safeLoadTeachers);
 
   // Students
-  const [students, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem('satutangan_students');
-    return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
-  });
+  const [students, setStudents] = useState<Student[]>(safeLoadStudents);
 
   // Teacher Attendance
-  const [teacherAttendance, setTeacherAttendance] = useState<TeacherAttendance[]>(() => {
-    const saved = localStorage.getItem('satutangan_teacher_attendance');
-    return saved ? JSON.parse(saved) : INITIAL_TEACHER_ATTENDANCE;
-  });
+  const [teacherAttendance, setTeacherAttendance] = useState<TeacherAttendance[]>(safeLoadTeacherAttendance);
 
   // Student Attendance
-  const [studentAttendance, setStudentAttendance] = useState<StudentAttendance[]>(() => {
-    const saved = localStorage.getItem('satutangan_student_attendance');
-    return saved ? JSON.parse(saved) : INITIAL_STUDENT_ATTENDANCE;
-  });
+  const [studentAttendance, setStudentAttendance] = useState<StudentAttendance[]>(safeLoadStudentAttendance);
 
   // Report Cards (keyed by studentId)
-  const [reportCards, setReportCards] = useState<Record<string, ReportCard>>(() => {
-    const saved = localStorage.getItem('satutangan_report_cards');
-    return saved ? JSON.parse(saved) : { 'std-01': INITIAL_REPORT_CARD };
-  });
+  const [reportCards, setReportCards] = useState<Record<string, ReportCard>>(safeLoadReportCards);
 
   // School Profile state (Used in all reports & headers)
-  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>(() => {
-    const saved = localStorage.getItem('satutangan_school_profile');
-    return saved ? JSON.parse(saved) : INITIAL_SCHOOL_PROFILE;
-  });
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>(safeLoadSchoolProfile);
 
   // Operator Password state
-  const [operatorPassword, setOperatorPassword] = useState<string>(() => {
-    const saved = localStorage.getItem('satutangan_operator_password');
-    return saved || 'operator2026';
-  });
+  const [operatorPassword, setOperatorPassword] = useState<string>(safeLoadPassword);
 
   // Settings Modal State (Triggered by Logo Satu Tangan -> Profil)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsActiveTab, setSettingsActiveTab] = useState<'profil-sekolah' | 'password-login' | 'backup-restore' | 'reset-database'>('profil-sekolah');
 
   // Dynamic Entities & Records
-  const [dynamicEntities, setDynamicEntities] = useState<DynamicEntity[]>(() => {
-    const saved = localStorage.getItem('satutangan_dynamic_entities');
-    return saved ? JSON.parse(saved) : INITIAL_DYNAMIC_ENTITIES;
-  });
+  const [dynamicEntities, setDynamicEntities] = useState<DynamicEntity[]>(safeLoadDynamicEntities);
 
-  const [dynamicRecords, setDynamicRecords] = useState<DynamicRecord[]>(() => {
-    const saved = localStorage.getItem('satutangan_dynamic_records');
-    return saved ? JSON.parse(saved) : INITIAL_DYNAMIC_RECORDS;
-  });
+  const [dynamicRecords, setDynamicRecords] = useState<DynamicRecord[]>(safeLoadDynamicRecords);
 
   // Persistence side-effects
   useEffect(() => {
@@ -287,6 +410,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTeachers(prev => prev.filter(t => t.id !== id));
   };
 
+  const bulkAddTeachers = (newTeachers: Omit<Teacher, 'id'>[], mode: 'append' | 'replace' = 'append') => {
+    let count = 0;
+    setTeachers(prev => {
+      const generated: Teacher[] = newTeachers.map((t, idx) => ({
+        id: 'tch-' + Date.now().toString(36) + '-' + idx,
+        ...t
+      }));
+      count = generated.length;
+      if (mode === 'replace') {
+        return generated;
+      }
+      return [...generated, ...prev];
+    });
+    return count;
+  };
+
   // Students Handlers with relational cascading sync to Dynamic Records!
   const addStudent = (studentData: Omit<Student, 'id'>) => {
     const newStudent: Student = {
@@ -323,6 +462,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStudents(prev => prev.filter(s => s.id !== id));
     // Remove orphaned records or keep history
     setDynamicRecords(prev => prev.filter(r => r.studentId !== id));
+  };
+
+  const bulkAddStudents = (newStudents: Omit<Student, 'id'>[], mode: 'append' | 'replace' = 'append') => {
+    let count = 0;
+    setStudents(prev => {
+      const generated: Student[] = newStudents.map((s, idx) => ({
+        id: 'std-' + Date.now().toString(36) + '-' + idx,
+        ...s
+      }));
+      count = generated.length;
+      if (mode === 'replace') {
+        return generated;
+      }
+      return [...generated, ...prev];
+    });
+    return count;
   };
 
   // Attendance Handlers
@@ -486,6 +641,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev,
       [report.studentId]: report
     }));
+  };
+
+  const bulkSaveReportCards = (reports: Record<string, ReportCard>) => {
+    const count = Object.keys(reports).length;
+    setReportCards(prev => ({
+      ...prev,
+      ...reports
+    }));
+    return count;
   };
 
   // Dynamic Entities & Synchronized Records
@@ -665,10 +829,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addTeacher,
         updateTeacher,
         deleteTeacher,
+        bulkAddTeachers,
         students,
         addStudent,
         updateStudent,
         deleteStudent,
+        bulkAddStudents,
         teacherAttendance,
         markTeacherAttendance,
         bulkMarkTeachers,
@@ -678,6 +844,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         recordFingerprintAttendance,
         reportCards,
         saveReportCard,
+        bulkSaveReportCards,
         dynamicEntities,
         dynamicRecords,
         createDynamicEntity,

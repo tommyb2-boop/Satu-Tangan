@@ -192,25 +192,43 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
         <div className="absolute right-1/3 -bottom-20 w-72 h-72 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-          <div className="space-y-1.5 max-w-2xl">
+          <div className="flex items-start gap-4 max-w-2xl">
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
-              className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer group"
-              title="Klik untuk mengubah Profil Sekolah & Pengaturan"
+              className="hidden sm:flex items-center justify-center shrink-0 w-16 h-16 rounded-2xl bg-slate-900/90 border border-indigo-500/30 p-1.5 shadow-lg shadow-indigo-950/60 overflow-hidden group hover:scale-105 transition-transform cursor-pointer"
+              title="Klik untuk mengubah Logo & Profil Sekolah"
             >
-              <School className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
-              <span>{schoolProfile?.schoolName || operator?.schoolName || 'SMP Negeri 1 Cendekia Mandiri'}</span>
-              <span className="text-[9px] bg-indigo-500/30 text-indigo-200 px-1.5 py-0.5 rounded font-normal">Pengaturan Profil</span>
+              {schoolProfile?.logoUrl ? (
+                <img 
+                  src={schoolProfile.logoUrl} 
+                  alt="Logo Sekolah" 
+                  className="w-full h-full object-contain rounded-xl"
+                />
+              ) : (
+                <School className="w-8 h-8 text-indigo-400 group-hover:text-indigo-300" />
+              )}
             </button>
+            <div className="space-y-1.5">
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer group"
+                title="Klik untuk mengubah Profil Sekolah & Pengaturan"
+              >
+                <School className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                <span>{schoolProfile?.schoolName || operator?.schoolName || 'SMP Negeri 1 Cendekia Mandiri'}</span>
+                <span className="text-[9px] bg-indigo-500/30 text-indigo-200 px-1.5 py-0.5 rounded font-normal">Pengaturan Profil</span>
+              </button>
 
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-              Selamat Bertugas, {operator?.name || 'Operator Pendidikan'}
-            </h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                Selamat Bertugas, {operator?.name || 'Operator Pendidikan'}
+              </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Semua kebutuhan pengajar dalam mengolah data siswa, absensi sidik jari, cetak raport, dan entitas kegiatan terpadu dalam satu aplikasi.
-            </p>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Semua kebutuhan pengajar dalam mengolah data siswa, absensi sidik jari, cetak raport, dan entitas kegiatan terpadu dalam satu aplikasi.
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto">
@@ -324,7 +342,7 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
                   <div className="text-[11px] sm:text-xs font-bold text-white tabular-data truncate">
                     {card.statValue}
                   </div>
-                  <div className="text-[9px] sm:text-[10px] text-slate-400 truncate hidden xs:block">
+                  <div className="text-[9px] sm:text-[10px] text-slate-400 truncate">
                     {card.statLabel}
                   </div>
                 </div>

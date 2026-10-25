@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ReportCard, SubjectScore, Student } from '../../types';
 import { 
@@ -24,9 +24,12 @@ import {
   X,
   Palette,
   Sliders,
-  CheckCircle2
+  CheckCircle2,
+  Upload,
+  AlertTriangle
 } from 'lucide-react';
 import { INITIAL_REPORT_CARD } from '../../data/initialData';
+import { generateReportCardTemplate, parseReportCardExcel, ParsedRaportEntry } from '../../utils/excelUtils';
 import jsPDF from 'jspdf';
 import confetti from 'canvas-confetti';
 
@@ -84,7 +87,7 @@ const DEFAULT_FALLBACK_STUDENT: Student = {
 };
 
 export const ReportCardModule: React.FC = () => {
-  const { students, teachers, reportCards, saveReportCard, setActiveTab, schoolProfile } = useApp();
+  const { students, teachers, reportCards, saveReportCard, bulkSaveReportCards, setActiveTab, schoolProfile } = useApp();
   const [selectedStudentId, setSelectedStudentId] = useState<string>(students[0]?.id || 'std-01');
   const [activeView, setActiveView] = useState<'preview' | 'input'>('preview');
 
@@ -100,13 +103,13 @@ export const ReportCardModule: React.FC = () => {
     studentId: selectedStudent?.id || selectedStudentId,
   };
 
-  const [formScores, setFormScores] = useState<SubjectScore[]>(currentReport.scores);
+  const [formScores, setFormScores] = useState<SubjectScore[]>(currentReport.scores || INITIAL_REPORT_CARD.scores || []);
   const [academicYear, setAcademicYear] = useState(currentReport.academicYear || '2025/2026');
   const [semester, setSemester] = useState<'Ganjil' | 'Genap'>(currentReport.semester || 'Ganjil');
-  const [spiritualAttitude, setSpiritualAttitude] = useState(currentReport.sikapSpiritual);
-  const [socialAttitude, setSocialAttitude] = useState(currentReport.sikapSosial);
-  const [teacherNotes, setTeacherNotes] = useState(currentReport.teacherNotes);
-  const [attendanceRecap, setAttendanceRecap] = useState(currentReport.attendanceSummary);
+  const [spiritualAttitude, setSpiritualAttitude] = useState(currentReport.sikapSpiritual || 'Sangat Baik');
+  const [socialAttitude, setSocialAttitude] = useState(currentReport.sikapSosial || 'Sangat Baik');
+  const [teacherNotes, setTeacherNotes] = useState(currentReport.teacherNotes || 'Pertahankan prestasi dan semangat belajarmu.');
+  const [attendanceRecap, setAttendanceRecap] = useState(currentReport.attendanceSummary || { sakit: 0, izin: 1, alpa: 0 });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Settings Modal State
@@ -121,6 +124,110 @@ export const ReportCardModule: React.FC = () => {
   const [newSubName, setNewSubName] = useState('');
   const [newSubKkm, setNewSubKkm] = useState(75);
   const [applyToAllStudents, setApplyToAllStudents] = useState(true);
+
+  // Excel Raport Import States
+  const excelFileInputRef = useRef<HTMLInputElement>(null);
+  const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
+  const [excelImportFileName, setExcelImportFileName] = useState('');
+  const [excelImportMap, setExcelImportMap] = useState<Record<string, ParsedRaportEntry>>({});
+  const [excelImportErrors, setExcelImportErrors] = useState<string[]>([]);
+  const [isExcelParsing, setIsExcelParsing] = useState(false);
+  const [excelImportSuccessMsg, setExcelImportSuccessMsg] = useState('');
+
+  // Handle Download Excel Template
+  const handleDownloadExcelTemplate = () => {
+    generateReportCardTemplate(
+      students,
+      formScores.map(s => ({ name: s.subjectName, kkm: s.kkm, deskripsi: s.deskripsi })),
+      academicYear,
+      semester
+    );
+  };
+
+  // Handle Excel File Selected
+  const handleExcelFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setExcelImportFileName(file.name);
+    setExcelImportSuccessMsg('');
+    setIsExcelParsing(true);
+
+    const result = await parseReportCardExcel(file, students);
+    setIsExcelParsing(false);
+
+    if (result.success && Object.keys(result.studentsReportMap).length > 0) {
+      setExcelImportMap(result.studentsReportMap);
+      setExcelImportErrors(result.errors);
+      setIsExcelImportModalOpen(true);
+    } else {
+      alert(result.errors.join('\n') || 'Gagal membaca data nilai dari file Excel.');
+    }
+
+    e.target.value = '';
+  };
+
+  // Handle Confirm Import Raport
+  const handleConfirmExcelImport = () => {
+    const entries = Object.entries(excelImportMap);
+    if (entries.length === 0) return;
+
+    const updatedReports: Record<string, ReportCard> = {};
+
+    entries.forEach(([key, entry]) => {
+      // Resolve student id
+      let targetStudentId = key;
+      const matched = students.find(s => s.id === key || s.nisn === entry.studentNisn || s.name.toLowerCase().trim() === entry.studentName.toLowerCase().trim());
+      if (matched) {
+        targetStudentId = matched.id;
+      }
+
+      const existingReport = reportCards[targetStudentId] || {
+        ...INITIAL_REPORT_CARD,
+        id: 'rep-' + targetStudentId,
+        studentId: targetStudentId
+      };
+
+      updatedReports[targetStudentId] = {
+        ...existingReport,
+        studentId: targetStudentId,
+        academicYear,
+        semester,
+        scores: entry.scores,
+        sikapSpiritual: entry.spiritualAttitude || existingReport.sikapSpiritual,
+        sikapSosial: entry.socialAttitude || existingReport.sikapSosial,
+        teacherNotes: entry.teacherNotes || existingReport.teacherNotes,
+        attendanceSummary: entry.attendanceSummary || existingReport.attendanceSummary
+      };
+    });
+
+    const savedCount = bulkSaveReportCards(updatedReports);
+
+    // If currently selected student was updated, sync live form states
+    const activeStudentTargetId = selectedStudent?.id || selectedStudentId;
+    if (updatedReports[activeStudentTargetId]) {
+      const activeUpdated = updatedReports[activeStudentTargetId];
+      setFormScores(activeUpdated.scores);
+      if (activeUpdated.sikapSpiritual) setSpiritualAttitude(activeUpdated.sikapSpiritual);
+      if (activeUpdated.sikapSosial) setSocialAttitude(activeUpdated.sikapSosial);
+      if (activeUpdated.teacherNotes) setTeacherNotes(activeUpdated.teacherNotes);
+      if (activeUpdated.attendanceSummary) setAttendanceRecap(activeUpdated.attendanceSummary);
+    }
+
+    setExcelImportSuccessMsg(`Berhasil mengimpor dan memperbarui nilai raport untuk ${savedCount} peserta didik!`);
+
+    try {
+      confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+    } catch {
+      // ignore
+    }
+
+    setTimeout(() => {
+      setIsExcelImportModalOpen(false);
+      setExcelImportMap({});
+      setExcelImportSuccessMsg('');
+    }, 1600);
+  };
 
   // When changing student, sync state
   const handleSelectStudent = (id: string) => {
@@ -365,31 +472,49 @@ export const ReportCardModule: React.FC = () => {
 
   // Determine whether this is TK (Taman Kanak-kanak) level
   const isTKLevel = 
-    Boolean(schoolProfile.educationLevel && schoolProfile.educationLevel.toLowerCase().includes('tk')) ||
+    Boolean(schoolProfile?.educationLevel && schoolProfile.educationLevel.toLowerCase().includes('tk')) ||
     Boolean(selectedStudent?.className && selectedStudent.className.toLowerCase().includes('tk')) ||
-    formScores.some(s => s.subjectName.toLowerCase().includes('moral') || s.subjectName.toLowerCase().includes('motorik'));
+    (formScores || []).some(s => (s?.subjectName || '').toLowerCase().includes('moral') || (s?.subjectName || '').toLowerCase().includes('motorik'));
 
   const kurikulumFaseText = isTKLevel ? 'Fase Fondasi (PAUD / TK)' : 'Fase D (Kurikulum Merdeka)';
 
   const handleDownloadPdf = () => {
     const doc = new jsPDF('p', 'mm', 'a4');
     
-    // Header from School Profile
+    // Dedicated School Logo for Kop Surat
+    const activeLogo = schoolProfile?.logoUrl;
+    if (activeLogo) {
+      try {
+        doc.addImage(activeLogo, 'JPEG', 15, 12, 22, 22);
+      } catch {
+        try {
+          doc.addImage(activeLogo, 'PNG', 15, 12, 22, 22);
+        } catch {
+          // continue gracefully if format unsupported in pdf
+        }
+      }
+    }
+
+    // Header from School Profile (Centered with guaranteed margins, never overlapping logo)
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text((schoolProfile?.letterheadProvince || 'PEMERINTAH DAERAH PROVINSI').toUpperCase(), 105, 16, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text((schoolProfile?.letterheadAgency || 'DINAS PENDIDIKAN & KEBUDAYAAN').toUpperCase(), 105, 21, { align: 'center' });
     doc.setFontSize(13);
-    doc.text((schoolProfile.letterheadProvince || 'DINAS PENDIDIKAN').toUpperCase(), 105, 17, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text((schoolProfile.letterheadAgency || 'KANTOR WILAYAH PENDIDIKAN').toUpperCase(), 105, 23, { align: 'center' });
-    doc.setFontSize(14);
-    doc.text((schoolProfile.schoolName || 'SEKOLAH').toUpperCase(), 105, 30, { align: 'center' });
-    doc.setFontSize(8.5);
+    doc.text((schoolProfile?.schoolName || 'SMP NEGERI 1 CENDEKIA MANDIRI').toUpperCase(), 105, 27.5, { align: 'center' });
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${schoolProfile.address}, ${schoolProfile.city} | NPSN: ${schoolProfile.npsn} | Akreditasi: ${schoolProfile.accreditation}`, 105, 35, { align: 'center' });
+    const fullAddress = `${schoolProfile?.address || ''}, ${schoolProfile?.subdistrict ? `Kec. ${schoolProfile.subdistrict}, ` : ''}${schoolProfile?.city || ''}, ${schoolProfile?.province || ''} ${schoolProfile?.postalCode || ''} | Telp: ${schoolProfile?.phone || ''}`;
+    doc.text(fullAddress, 105, 32.5, { align: 'center' });
+    doc.setFontSize(7);
+    doc.text(`NPSN: ${schoolProfile?.npsn || '-'} | NSS: ${schoolProfile?.nss || '-'} | Akreditasi: ${schoolProfile?.accreditation || '-'} | Email: ${schoolProfile?.email || '-'}`, 105, 36, { align: 'center' });
     
-    doc.setLineWidth(0.6);
-    doc.line(15, 38, 195, 38);
+    // Official Double Line of Kop Surat
+    doc.setLineWidth(0.7);
+    doc.line(15, 38.5, 195, 38.5);
     doc.setLineWidth(0.2);
-    doc.line(15, 39.5, 195, 39.5);
+    doc.line(15, 39.8, 195, 39.8);
 
     // Document Title
     doc.setFont('helvetica', 'bold');
@@ -397,7 +522,7 @@ export const ReportCardModule: React.FC = () => {
     const titleText = isTKLevel 
       ? 'LAPORAN PERKEMBANGAN PESERTA DIDIK (RAPORT TK / PAUD)' 
       : 'LAPORAN HASIL CAPAIAN BELAJAR SISWA (RAPORT)';
-    doc.text(titleText, 105, 46, { align: 'center' });
+    doc.text(titleText, 105, 46.5, { align: 'center' });
 
     // Student Info
     doc.setFontSize(8.5);
@@ -501,17 +626,49 @@ export const ReportCardModule: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Buttons: Switch view, SETTINGS, and Print / PDF */}
-        <div className="flex items-center gap-2.5 flex-wrap self-stretch sm:self-auto">
-          {/* Tombol Seting Raport (Request Spesifik User) */}
+        {/* Action Buttons: Switch view, SETTINGS, Excel Tools, and Print / PDF */}
+        <div className="flex items-center gap-2 flex-wrap self-stretch sm:self-auto">
+          {/* Hidden File Input for Excel Raport */}
+          <input
+            ref={excelFileInputRef}
+            type="file"
+            accept=".xlsx, .xls, .csv"
+            onChange={handleExcelFileChange}
+            className="hidden"
+          />
+
+          {/* Tombol Seting Raport */}
           <button
             type="button"
             onClick={handleOpenConfigModal}
-            className="py-2 px-3.5 rounded-xl text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-md shadow-amber-500/20 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer ring-2 ring-amber-400/40"
+            className="py-2 px-3 rounded-xl text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-md shadow-amber-500/20 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer ring-2 ring-amber-400/40"
             title="Pengaturan Bagian Penting Raport: Tahun Ajaran, Semester, Mapel/KKM, Wali Kelas, dan Kota/Tanggal"
           >
             <Settings className="w-4 h-4 text-slate-950 animate-spin-slow" />
-            <span>Pengaturan Raport</span>
+            <span>Seting Raport</span>
+          </button>
+
+          {/* Download Form Excel Raport */}
+          <button
+            type="button"
+            onClick={handleDownloadExcelTemplate}
+            className="py-2 px-3 rounded-xl text-xs font-semibold text-emerald-300 bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-700/60 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Download Form Template Excel untuk Pengisian Nilai Raport Siswa"
+          >
+            <Download className="w-4 h-4 text-emerald-400" />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+            <span>Download Form Excel</span>
+          </button>
+
+          {/* Import Excel Raport */}
+          <button
+            type="button"
+            onClick={() => excelFileInputRef.current?.click()}
+            className="py-2 px-3 rounded-xl text-xs font-semibold text-indigo-200 bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Import Nilai Raport dari File Excel"
+          >
+            <Upload className="w-4 h-4 text-indigo-400" />
+            <span>Import Excel</span>
           </button>
 
           {/* Toggle View */}
@@ -540,7 +697,7 @@ export const ReportCardModule: React.FC = () => {
 
           <button
             onClick={handleNativePrint}
-            className="py-2 px-3 rounded-xl text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1.5"
+            className="py-2 px-3 rounded-xl text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
             title="Cetak langsung ke printer atau Save as PDF"
           >
             <Printer className="w-4 h-4 text-rose-400" />
@@ -549,7 +706,7 @@ export const ReportCardModule: React.FC = () => {
 
           <button
             onClick={handleDownloadPdf}
-            className="py-2 px-3.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30 transition-all flex items-center gap-1.5 active:translate-y-0.5"
+            className="py-2 px-3.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30 transition-all flex items-center gap-1.5 active:translate-y-0.5 cursor-pointer"
             title="Download file PDF langsung"
           >
             <Download className="w-4 h-4" />
@@ -626,13 +783,34 @@ export const ReportCardModule: React.FC = () => {
                   Bobot kalkulasi otomatis: Tugas (30%), UTS (30%), UAS (40%) &bull; Predikat otomatis dihitung dari KKM
                 </p>
               </div>
-              <button
-                onClick={handleSaveGradesOnly}
-                className="py-2 px-4 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/30 flex items-center gap-2 cursor-pointer"
-              >
-                {saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                <span>{saveSuccess ? 'Berhasil Disimpan!' : 'Simpan Nilai Raport'}</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadExcelTemplate}
+                  className="py-1.5 px-3 rounded-xl text-xs font-semibold text-emerald-300 bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-700/60 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Download Form Template Excel untuk Pengisian Nilai Raport Siswa"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Download Form Excel</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => excelFileInputRef.current?.click()}
+                  className="py-1.5 px-3 rounded-xl text-xs font-semibold text-indigo-200 bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Import Nilai Raport dari File Excel"
+                >
+                  <Upload className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Import Excel</span>
+                </button>
+                <button
+                  onClick={handleSaveGradesOnly}
+                  className="py-1.5 px-3.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/30 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                  <span>{saveSuccess ? 'Tersimpan!' : 'Simpan Nilai'}</span>
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -752,26 +930,67 @@ export const ReportCardModule: React.FC = () => {
       )}
 
       {/* VIEW 2: Official Printable Raport Document */}
-      <div className="printable-raport max-w-4xl mx-auto bg-white text-slate-900 rounded-3xl p-8 sm:p-12 shadow-2xl border border-slate-200">
+      <div className={`printable-raport max-w-4xl mx-auto bg-white text-slate-900 rounded-3xl p-6 sm:p-10 lg:p-12 shadow-2xl border border-slate-200 ${
+        activeView === 'input' ? 'hidden print:block' : 'block'
+      }`}>
         
-        {/* Official Kop Surat Sekolah */}
-        <div className="border-b-4 border-double border-slate-900 pb-4 mb-6 text-center relative">
-          <div className="w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xl absolute left-2 top-0 hidden sm:flex">
-            ST
+        {/* Official Kop Surat Sekolah with Dedicated Logo Space & Balanced Centering */}
+        <div className="kop-surat-wrapper mb-6">
+          <div className="flex items-center justify-between gap-3 sm:gap-6 min-h-[90px]">
+            {/* Left: Dedicated Reserved Space for School Logo */}
+            <div className="w-20 sm:w-24 shrink-0 flex items-center justify-center">
+              {schoolProfile?.logoUrl ? (
+                <img
+                  src={schoolProfile.logoUrl}
+                  alt="Logo Resmi Sekolah"
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                />
+              ) : (
+                <div 
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 p-1 text-center bg-slate-50"
+                  title="Space Logo Sekolah (Dapat diunggah melalui tombol Profil Sekolah)"
+                >
+                  <School className="w-6 h-6 text-slate-400 mb-0.5" />
+                  <span className="text-[8px] font-semibold uppercase leading-none">Space Logo</span>
+                </div>
+              )}
+            </div>
+
+            {/* Center: Official School Letterhead Hierarchy */}
+            <div className="flex-1 text-center px-1 min-w-0">
+              <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 leading-tight">
+                {schoolProfile?.letterheadProvince || 'PEMERINTAH DAERAH PROVINSI'}
+              </h3>
+              <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 leading-tight">
+                {schoolProfile?.letterheadAgency || 'DINAS PENDIDIKAN & KEBUDAYAAN'}
+              </h3>
+              <h2 className="text-lg sm:text-2xl font-black text-slate-950 tracking-tight uppercase mt-1 leading-snug">
+                {schoolProfile?.schoolName || 'SMP NEGERI 1 CENDEKIA MANDIRI'}
+              </h2>
+              <p className="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed">
+                {schoolProfile?.address || ''}, {schoolProfile?.subdistrict ? `Kec. ${schoolProfile.subdistrict}, ` : ''}{schoolProfile?.city || ''}, {schoolProfile?.province || ''} {schoolProfile?.postalCode || ''} &bull; Telp: {schoolProfile?.phone || ''}
+              </p>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-mono mt-0.5">
+                NPSN: {schoolProfile?.npsn || '-'} &bull; NSS: {schoolProfile?.nss || '-'} &bull; Akreditasi: {schoolProfile?.accreditation || 'A'}
+                {schoolProfile?.website ? ` &bull; Web: ${schoolProfile.website}` : ''}
+              </p>
+            </div>
+
+            {/* Right: Symmetrical Balancer Space (guarantees text remains mathematically centered) */}
+            <div className="w-20 sm:w-24 shrink-0 flex flex-col items-center justify-center text-center opacity-85">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border border-slate-200 bg-slate-50/70 p-1 flex flex-col items-center justify-center text-slate-500 shadow-2xs">
+                <span className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">AKREDITASI</span>
+                <span className="text-xs font-black text-indigo-700 leading-none">{(schoolProfile?.accreditation || 'A').split(' ')[0] || 'A'}</span>
+                <span className="text-[7px] font-semibold text-slate-500 mt-0.5">RESMI</span>
+              </div>
+            </div>
           </div>
 
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            {schoolProfile.letterheadProvince} &bull; {schoolProfile.letterheadAgency}
-          </h3>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight uppercase mt-0.5">
-            {schoolProfile.schoolName}
-          </h2>
-          <p className="text-xs text-slate-600 mt-1">
-            {schoolProfile.address}, {schoolProfile.city}, {schoolProfile.province} {schoolProfile.postalCode} &bull; Telp: {schoolProfile.phone}
-          </p>
-          <p className="text-[11px] text-slate-500 font-mono">
-            NPSN: {schoolProfile.npsn} &bull; NSS: {schoolProfile.nss} &bull; Akreditasi: {schoolProfile.accreditation}
-          </p>
+          {/* Official Double Line of Kop Surat */}
+          <div className="mt-3">
+            <div className="border-b-[2.5px] border-slate-950 w-full mb-[2px]"></div>
+            <div className="border-b border-slate-950 w-full"></div>
+          </div>
         </div>
 
         {/* Title */}
@@ -856,7 +1075,7 @@ export const ReportCardModule: React.FC = () => {
             <div className="pt-2 text-[11px]">
               <div className="font-semibold text-slate-800">Kegiatan Ekstrakurikuler / Minat Bakat:</div>
               <ul className="list-disc list-inside text-slate-600 mt-0.5 space-y-0.5">
-                {currentReport.extracurriculars.map((ekskul, i) => (
+                {(currentReport.extracurriculars || []).map((ekskul, i) => (
                   <li key={i}>
                     {ekskul.name} (Predikat {ekskul.score}): {ekskul.notes}
                   </li>
@@ -871,9 +1090,9 @@ export const ReportCardModule: React.FC = () => {
               B. Ketidakhadiran & Catatan Pendidik
             </h5>
             <div className="grid grid-cols-3 gap-2 text-center py-1 bg-slate-50 rounded">
-              <div>Sakit: <strong>{attendanceRecap.sakit} hari</strong></div>
-              <div>Izin: <strong>{attendanceRecap.izin} hari</strong></div>
-              <div>Alpa: <strong>{attendanceRecap.alpa} hari</strong></div>
+              <div>Sakit: <strong>{(attendanceRecap?.sakit ?? 0)} hari</strong></div>
+              <div>Izin: <strong>{(attendanceRecap?.izin ?? 0)} hari</strong></div>
+              <div>Alpa: <strong>{(attendanceRecap?.alpa ?? 0)} hari</strong></div>
             </div>
             <div className="pt-1 text-[11px] text-slate-700">
               <span className="font-semibold block text-slate-900">Catatan Wali Kelas:</span>
@@ -894,8 +1113,8 @@ export const ReportCardModule: React.FC = () => {
                 [Stempel]
               </div>
             </div>
-            <p className="font-bold text-slate-950 underline">{schoolProfile.headmasterName}</p>
-            <p className="text-[10px] text-slate-600 font-mono">NIP. {schoolProfile.headmasterNip}</p>
+            <p className="font-bold text-slate-950 underline">{schoolProfile?.headmasterName || 'Kepala Sekolah'}</p>
+            <p className="text-[10px] text-slate-600 font-mono">NIP. {schoolProfile?.headmasterNip || '-'}</p>
           </div>
 
           {/* Center QR Digital Validation */}
@@ -1278,6 +1497,143 @@ export const ReportCardModule: React.FC = () => {
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Simpan & Terapkan Pengaturan</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Import Excel Raport Preview */}
+      {isExcelImportModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl animate-scaleUp">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-600/20 text-emerald-400">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Import Nilai Raport dari Excel</h3>
+                  <p className="text-xs text-slate-400">
+                    File: <span className="font-mono text-emerald-300">{excelImportFileName}</span> &bull; Terdeteksi: <strong className="text-white">{Object.keys(excelImportMap).length} Siswa</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsExcelImportModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {excelImportSuccessMsg ? (
+                <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-800 text-emerald-200 flex items-center gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+                  <div>
+                    <h4 className="font-bold text-sm text-emerald-300">Import Nilai Berhasil!</h4>
+                    <p className="text-xs">{excelImportSuccessMsg}</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-800/50 text-xs text-indigo-200 space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-white">
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                      <span>Kalkulasi Otomatis Nilai Akhir & Predikat:</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-indigo-300">
+                      Nilai Akhir dihitung otomatis dengan formula standar kurikulum: (Tugas 30%) + (UTS 30%) + (UAS 40%). Predikat A, B, C, D dihitung otomatis berdasarkan nilai KKM setiap mata pelajaran.
+                    </p>
+                  </div>
+
+                  {/* Errors / Warnings */}
+                  {excelImportErrors.length > 0 && (
+                    <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-300 space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <AlertTriangle className="w-4 h-4 text-amber-400" />
+                        <span>Catatan Import ({excelImportErrors.length}):</span>
+                      </div>
+                      <ul className="list-disc list-inside text-[11px] space-y-0.5 text-amber-400/90 max-h-24 overflow-y-auto">
+                        {excelImportErrors.slice(0, 5).map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Preview Table of Students and their scores */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                        Daftar Siswa & Nilai Terdeteksi ({Object.keys(excelImportMap).length} Peserta Didik):
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto border border-slate-800 rounded-xl">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-950 text-slate-400 uppercase text-[10px]">
+                          <tr>
+                            <th className="py-2.5 px-3">No</th>
+                            <th className="py-2.5 px-3">Nama Siswa</th>
+                            <th className="py-2.5 px-3">NISN</th>
+                            <th className="py-2.5 px-3">Kelas</th>
+                            <th className="py-2.5 px-3 text-center">Jumlah Mapel</th>
+                            <th className="py-2.5 px-3 text-center">Rata-rata Nilai</th>
+                            <th className="py-2.5 px-3">Sikap & Kehadiran</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                          {Object.entries(excelImportMap).map(([key, entry], idx) => {
+                            const avgScore = entry.scores.length > 0
+                              ? Math.round(entry.scores.reduce((acc, s) => acc + s.nilaiAkhir, 0) / entry.scores.length)
+                              : 0;
+                            return (
+                              <tr key={key} className="hover:bg-slate-800/30">
+                                <td className="py-2.5 px-3 font-mono text-slate-500">{idx + 1}</td>
+                                <td className="py-2.5 px-3 font-semibold text-white">{entry.studentName}</td>
+                                <td className="py-2.5 px-3 font-mono text-slate-400">{entry.studentNisn}</td>
+                                <td className="py-2.5 px-3 font-medium text-rose-300">Kelas {entry.className}</td>
+                                <td className="py-2.5 px-3 text-center">
+                                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-400 font-mono font-bold text-[11px]">
+                                    {entry.scores.length} Mapel
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3 text-center font-bold font-mono text-emerald-400">
+                                  {avgScore}
+                                </td>
+                                <td className="py-2.5 px-3 text-[11px] text-slate-400">
+                                  Spiritual: {entry.spiritualAttitude || 'Baik'} &bull; S: {entry.attendanceSummary?.sakit || 0}, I: {entry.attendanceSummary?.izin || 0}, A: {entry.attendanceSummary?.alpa || 0}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsExcelImportModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              {!excelImportSuccessMsg && (
+                <button
+                  type="button"
+                  onClick={handleConfirmExcelImport}
+                  disabled={Object.keys(excelImportMap).length === 0}
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Terapkan & Simpan Nilai Raport ({Object.keys(excelImportMap).length} Siswa)</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

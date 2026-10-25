@@ -66,7 +66,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
   };
 
   return (
-    <div className="h-screen h-dvh max-h-screen w-full bg-slate-950 text-slate-100 flex flex-col justify-between items-center p-3 sm:p-5 relative overflow-hidden select-none selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col justify-between items-center p-4 sm:p-6 relative overflow-y-auto select-none selection:bg-indigo-500 selection:text-white">
       {/* 3D Ambient Background Glows */}
       <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-indigo-600/20 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-emerald-600/15 blur-3xl pointer-events-none" />
@@ -74,10 +74,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
       {/* Top Header (Compact single row) */}
       <header className="w-full max-w-sm flex items-center justify-between shrink-0 pt-1 pb-1">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-indigo-400" />
-            </div>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 shrink-0 overflow-hidden">
+            <img 
+              src="/assets/aistudio/Gemini_Generated_Image_7fyqob7fyqob7fyq_ee286bdd.jpg" 
+              alt="Satu Tangan Guru" 
+              className="w-full h-full object-cover rounded-[10px]"
+            />
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5 leading-none">

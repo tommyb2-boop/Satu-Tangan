@@ -26,21 +26,28 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import { OFFICIAL_KEMENDIKBUD_LOGO } from '../data/initialData';
+
 const PRESET_LOGOS = [
   {
     id: 'kemendikbud',
-    name: 'Pendidikan Nasional (Kemendikbud)',
-    url: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="p1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="url(#p1)" stroke="#fbbf24" stroke-width="4"/><circle cx="60" cy="60" r="48" fill="#0f172a" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,2"/><path d="M60 26 L90 42 L60 58 L30 42 Z" fill="#fbbf24"/><path d="M42 50 L42 70 C42 78 78 78 78 70 L78 50" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="74" r="5" fill="#38bdf8"/><path d="M60 79 L60 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/><path d="M52 92 L68 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/></svg>`)
+    name: 'Pendidikan Nasional (Tut Wuri Handayani)',
+    url: OFFICIAL_KEMENDIKBUD_LOGO
   },
   {
     id: 'kemenag',
-    name: 'Madrasah / Kemenag',
+    name: 'Madrasah / Kemenag RI',
     url: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="p2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><polygon points="60,6 74,20 94,20 94,40 108,54 94,68 94,88 74,88 60,102 46,88 26,88 26,68 12,54 26,40 26,20 46,20" fill="url(#p2)" stroke="#f59e0b" stroke-width="3.5"/><circle cx="60" cy="54" r="34" fill="#064e3b"/><path d="M42 54 L60 40 L78 54 L60 68 Z" fill="#fef08a"/><circle cx="60" cy="54" r="7" fill="#065f46"/><path d="M46 64 C46 72 74 72 74 64" stroke="#f59e0b" stroke-width="2.5" fill="none"/></svg>`)
   },
   {
     id: 'cendekia',
-    name: 'Bintang Cendekia Emas',
+    name: 'Bintang Cendekia Mandiri',
     url: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="p3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#9333ea"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="url(#p3)" stroke="#facc15" stroke-width="4"/><polygon points="60,22 71,45 96,48 78,65 83,90 60,77 37,90 42,65 24,48 49,45" fill="#facc15" stroke="#ca8a04" stroke-width="2"/><circle cx="60" cy="58" r="14" fill="#1e1b4b"/><path d="M60 48 L60 68 M50 58 L70 58" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/></svg>`)
+  },
+  {
+    id: 'yayasan',
+    name: 'Akademi / Yayasan Swasta',
+    url: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="p4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0f766e"/><stop offset="100%" stop-color="#14b8a6"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="url(#p4)" stroke="#e2e8f0" stroke-width="4"/><circle cx="60" cy="60" r="44" fill="#134e4a"/><path d="M60 28 L82 44 L60 60 L38 44 Z" fill="#f8fafc"/><path d="M46 54 L46 72 C46 80 74 80 74 72 L74 54" fill="none" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="74" r="4" fill="#fbbf24"/><path d="M60 78 L60 90 M52 90 L68 90" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/></svg>`)
   }
 ];
 
@@ -410,6 +417,128 @@ export const AppSettingsModal: React.FC = () => {
                 <div>
                   <span className="font-bold text-white block">Sinkronisasi Otomatis Seluruh Dokumen & Raport:</span>
                   Data profil sekolah di bawah ini secara otomatis digunakan pada Kop Surat resmi, judul raport PDF, alamat institusi, dan tanda tangan Kepala Sekolah di seluruh modul.
+                </div>
+              </div>
+
+              {/* Card Upload Logo Sekolah */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-indigo-400" />
+                    <h3 className="text-xs uppercase font-extrabold tracking-wider text-slate-300">
+                      Logo Resmi Lembaga / Sekolah
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-indigo-300 bg-indigo-950/80 border border-indigo-800/60 px-2 py-0.5 rounded font-mono">
+                    Khusus Kop Surat Raport & Berkas
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                  {/* Logo Preview Frame */}
+                  <div className="relative group shrink-0">
+                    <div className="w-28 h-28 rounded-2xl bg-slate-900 border-2 border-dashed border-indigo-500/40 p-2 flex items-center justify-center shadow-lg shadow-indigo-950/50 overflow-hidden">
+                      {profileForm.logoUrl ? (
+                        <img
+                          src={profileForm.logoUrl}
+                          alt="Logo Sekolah"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-500 text-center p-2">
+                          <School className="w-8 h-8 mb-1 text-slate-600" />
+                          <span className="text-[10px]">Belum ada logo</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {profileForm.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="absolute inset-0 bg-slate-950/75 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex flex-col items-center justify-center text-white text-xs font-semibold gap-1 backdrop-blur-xs cursor-pointer"
+                        title="Klik untuk mengganti logo"
+                      >
+                        <Camera className="w-5 h-5 text-indigo-300" />
+                        <span>Ubah Logo</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Actions & Instructions */}
+                  <div className="flex-1 space-y-3 text-center sm:text-left">
+                    <div>
+                      <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                        Upload logo resmi sekolah Anda untuk ditempatkan pada Kop Surat lembar raport, surat dinas, dan berkas cetak institusi. Logo aplikasi <strong className="text-indigo-300">Satu Tangan Guru</strong> tetap aktif terpisah sebagai identitas sistem.
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Format: PNG, JPG, JPEG, SVG, WebP. Maksimal 5 MB (otomatis dipresisikan & dioptimalkan untuk cetak).
+                      </p>
+                    </div>
+
+                    {logoUploadError && (
+                      <div className="p-2.5 rounded-xl bg-rose-950/50 border border-rose-800 text-xs text-rose-300 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                        <span>{logoUploadError}</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                      {/* Hidden File Input */}
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-indigo-600/30 transition-all cursor-pointer"
+                      >
+                        <UploadCloud className="w-4 h-4" />
+                        <span>{profileForm.logoUrl ? 'Ganti Logo Sekolah' : 'Upload Logo Sekolah'}</span>
+                      </button>
+
+                      {profileForm.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveLogo}
+                          className="px-3.5 py-2 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          title="Hapus logo saat ini"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Presets */}
+                    <div className="pt-2 border-t border-slate-800/80">
+                      <span className="text-[11px] text-slate-400 block mb-1.5 font-medium">
+                        Atau pilih template logo standar:
+                      </span>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                        {PRESET_LOGOS.map((preset) => (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => handleSelectPresetLogo(preset.url)}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] transition-all cursor-pointer ${
+                              profileForm.logoUrl === preset.url
+                                ? 'bg-indigo-950/80 border-indigo-500 text-indigo-200 font-semibold'
+                                : 'bg-slate-900 hover:bg-slate-800 border-slate-700/70 text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            <img src={preset.url} alt={preset.name} className="w-4 h-4 object-contain rounded-xs" />
+                            <span>{preset.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

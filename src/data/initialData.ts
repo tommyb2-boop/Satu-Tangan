@@ -1,5 +1,9 @@
 import { Teacher, Student, TeacherAttendance, StudentAttendance, DynamicEntity, DynamicRecord, ReportCard, OperatorUser, SchoolProfile } from '../types';
 
+export const APP_LOGO_URL = '/assets/aistudio/Gemini_Generated_Image_7fyqob7fyqob7fyq_ee286bdd.jpg';
+
+export const OFFICIAL_KEMENDIKBUD_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><linearGradient id="scGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e3a8a"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="80" cy="80" r="76" fill="url(#scGrad)" stroke="#f59e0b" stroke-width="5"/><circle cx="80" cy="80" r="67" fill="#0f172a" stroke="#ffffff" stroke-width="2" stroke-dasharray="5,3"/><polygon points="80,24 88,38 104,40 92,52 95,68 80,60 65,68 68,52 56,40 72,38" fill="#fbbf24"/><path d="M50 78 C62 72 74 74 80 82 C86 74 98 72 110 78 L110 106 C98 100 86 102 80 110 C74 102 62 100 50 106 Z" fill="#ffffff" stroke="#f59e0b" stroke-width="2.5"/><path d="M80 62 C76 68 76 72 80 77 C84 72 84 68 80 62 Z" fill="#ef4444"/><path d="M78 77 L82 77 L81 85 L79 85 Z" fill="#f59e0b"/><path d="M46 116 C60 128 100 128 114 116" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/><text x="80" y="138" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#facc15" text-anchor="middle" letter-spacing="1.5">TUT WURI HANDAYANI</text></svg>`);
+
 export const INITIAL_SCHOOL_PROFILE: SchoolProfile = {
   schoolName: 'SMP Negeri 1 Cendekia Mandiri',
   npsn: '20109823',
@@ -19,7 +23,7 @@ export const INITIAL_SCHOOL_PROFILE: SchoolProfile = {
   headmasterNip: '19780512 200212 1 002',
   letterheadProvince: 'PEMERINTAH DAERAH PROVINSI JAWA BARAT',
   letterheadAgency: 'DINAS PENDIDIKAN & KEBUDAYAAN',
-  logoUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="url(#g)" stroke="#fbbf24" stroke-width="4"/><circle cx="60" cy="60" r="48" fill="#0f172a" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,2"/><path d="M60 26 L90 42 L60 58 L30 42 Z" fill="#fbbf24"/><path d="M42 50 L42 70 C42 78 78 78 78 70 L78 50" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="74" r="5" fill="#38bdf8"/><path d="M60 79 L60 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/><path d="M52 92 L68 92" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/></svg>`)
+  logoUrl: OFFICIAL_KEMENDIKBUD_LOGO
 };
 
 export const INITIAL_OPERATOR: OperatorUser = {

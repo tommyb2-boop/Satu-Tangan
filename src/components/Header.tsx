@@ -10,15 +10,17 @@ import {
   FileSpreadsheet,
   Boxes,
   Github,
-  Fingerprint
+  Fingerprint,
+  School
 } from 'lucide-react';
+import { APP_LOGO_URL } from '../data/initialData';
 
 interface HeaderProps {
   onOpenArchitecture: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
-  const { operator, logout, activeTab, setActiveTab, setIsSettingsOpen } = useApp();
+  const { operator, logout, activeTab, setActiveTab, setIsSettingsOpen, schoolProfile } = useApp();
 
   const navItems: { id: ActiveModule; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <Boxes className="w-4 h-4" /> },
@@ -34,43 +36,37 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Zone 1: Wordmark & Brand & Settings Trigger */}
+        {/* Zone 1: Wordmark & Brand with Application Logo */}
         <div className="flex items-center gap-3 shrink-0">
-          {/* Logo with "Profil" underneath as requested by user */}
-          <button
-            type="button"
-            onClick={() => setIsSettingsOpen(true)}
-            className="flex flex-col items-center group cursor-pointer text-left focus:outline-none"
-            title="Klik Logo untuk Pengaturan Aplikasi & Profil Sekolah"
+          <div 
+            onClick={() => setActiveTab('dashboard')}
+            className="flex items-center gap-3 cursor-pointer group select-none"
+            title="Satu Tangan Guru - Beranda Utama"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1px] shadow-lg shadow-indigo-500/25 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-200">
-              <div className="w-full h-full bg-slate-900 rounded-[11px] flex items-center justify-center relative">
-                <GraduationCap className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform duration-200" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-all duration-200 shrink-0">
+              <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center relative overflow-hidden">
+                <img 
+                  src={APP_LOGO_URL} 
+                  alt="Logo Aplikasi Satu Tangan Guru" 
+                  className="w-full h-full object-cover"
+                />
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-slate-900 animate-pulse" />
               </div>
             </div>
-            {/* Word "Profil" written right under the logo */}
-            <span className="text-[10px] font-bold tracking-wider text-indigo-300 uppercase mt-0.5 group-hover:text-amber-300 transition-colors">
-              Profil
-            </span>
-          </button>
 
-          <div 
-            onClick={() => setActiveTab('dashboard')}
-            className="cursor-pointer group select-none"
-            title="Kembali ke Dashboard Utama"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold tracking-tight text-white font-sans group-hover:text-indigo-200 transition-colors">
-                Satu Tangan
-              </span>
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-indigo-400 bg-indigo-950/70 border border-indigo-800/50 px-2 py-0.5 rounded">
-                v2.5
-              </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold tracking-tight text-white font-sans group-hover:text-indigo-200 transition-colors">
+                  Satu Tangan
+                </span>
+                <span className="text-[10px] uppercase font-semibold tracking-wider text-indigo-400 bg-indigo-950/70 border border-indigo-800/50 px-2 py-0.5 rounded">
+                  v2.5
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 hidden sm:block truncate max-w-[200px] lg:max-w-xs">
+                Kemudahan Tugas Pendidik
+              </p>
             </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block truncate max-w-[200px] lg:max-w-xs">
-              Aplikasi Operator Pendidikan
-            </p>
           </div>
         </div>
 
@@ -95,8 +91,18 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
           })}
         </nav>
 
-        {/* Zone 3: Architecture Inspector & Operator Profile Actions */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Zone 3: Architecture Inspector, School Profile & Operator Actions */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Tombol Profil Sekolah (Pengaturan Kop Surat & Info Lembaga) */}
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-indigo-200 bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 rounded-xl transition-all shadow-sm group cursor-pointer"
+            title="Pengaturan Profil Sekolah, Logo Kop Surat, Password & Backup"
+          >
+            <School className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline">Profil Sekolah</span>
+          </button>
+
           <button
             onClick={onOpenArchitecture}
             className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-lg transition-colors whitespace-nowrap"

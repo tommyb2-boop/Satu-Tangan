@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Student } from '../../types';
 import { 
@@ -15,15 +15,32 @@ import {
   X, 
   User, 
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Upload,
+  FileSpreadsheet,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
+import { generateStudentTemplate, parseStudentExcel } from '../../utils/excelUtils';
+import confetti from 'canvas-confetti';
 
 export const StudentDatabaseModule: React.FC = () => {
-  const { students, addStudent, updateStudent, deleteStudent, setActiveTab } = useApp();
+  const { students, addStudent, updateStudent, deleteStudent, bulkAddStudents, setActiveTab } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterClass, setFilterClass] = useState<string>('ALL');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+
+  // Excel Import States
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFileName, setImportFileName] = useState('');
+  const [importPreviewData, setImportPreviewData] = useState<Omit<Student, 'id'>[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importMode, setImportMode] = useState<'append' | 'replace'>('append');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importSuccessMsg, setImportSuccessMsg] = useState('');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,6 +143,50 @@ export const StudentDatabaseModule: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  // Handle Excel File Selection
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportFileName(file.name);
+    setImportSuccessMsg('');
+    setIsImporting(true);
+
+    const result = await parseStudentExcel(file);
+    setIsImporting(false);
+
+    if (result.success && result.data.length > 0) {
+      setImportPreviewData(result.data);
+      setImportErrors(result.errors);
+      setIsImportModalOpen(true);
+    } else {
+      alert(result.errors.join('\n') || 'Gagal membaca data dari file Excel.');
+    }
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  // Execute Import
+  const handleConfirmImport = () => {
+    if (importPreviewData.length === 0) return;
+
+    const count = bulkAddStudents(importPreviewData, importMode);
+    setImportSuccessMsg(`Berhasil mengimpor ${count} data siswa ke database!`);
+
+    try {
+      confetti({ particleCount: 40, spread: 65, origin: { y: 0.6 } });
+    } catch {
+      // ignore
+    }
+
+    setTimeout(() => {
+      setIsImportModalOpen(false);
+      setImportPreviewData([]);
+      setImportSuccessMsg('');
+    }, 1500);
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       {/* Top Header */}
@@ -151,13 +212,46 @@ export const StudentDatabaseModule: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleOpenAddModal}
-          className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/30 active:translate-y-0.5 transition-all flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tambah Siswa Baru</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx, .xls, .csv"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          {/* Download Form Excel */}
+          <button
+            onClick={generateStudentTemplate}
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-700/60 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Download Form Template Excel untuk Pengisian Data Siswa"
+          >
+            <Download className="w-4 h-4 text-emerald-400" />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+            <span>Download Form Excel</span>
+          </button>
+
+          {/* Import Excel */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-950/70 hover:bg-indigo-900/80 text-indigo-200 border border-indigo-700/60 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Import Data Siswa dari File Excel"
+          >
+            <Upload className="w-4 h-4 text-indigo-400" />
+            <span>Import Excel</span>
+          </button>
+
+          {/* Add Student */}
+          <button
+            onClick={handleOpenAddModal}
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/30 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Siswa</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -523,6 +617,168 @@ export const StudentDatabaseModule: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal Import Excel Preview */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleUp">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-purple-600/20 text-purple-400">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Import Data Siswa dari Excel</h3>
+                  <p className="text-xs text-slate-400">
+                    File: <span className="font-mono text-purple-300">{importFileName}</span> &bull; Terdeteksi: <strong className="text-white">{importPreviewData.length} Siswa</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsImportModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {importSuccessMsg ? (
+                <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-800 text-emerald-200 flex items-center gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+                  <div>
+                    <h4 className="font-bold text-sm text-emerald-300">Import Berhasil!</h4>
+                    <p className="text-xs">{importSuccessMsg}</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Mode Selection */}
+                  <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2">
+                    <label className="text-xs font-bold text-slate-300 block">Metode Penyimpanan Data:</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <label className={`p-3 rounded-xl border flex items-start gap-2.5 cursor-pointer transition-all ${
+                        importMode === 'append' ? 'bg-purple-950/60 border-purple-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="importMode"
+                          value="append"
+                          checked={importMode === 'append'}
+                          onChange={() => setImportMode('append')}
+                          className="mt-0.5 text-purple-600"
+                        />
+                        <div>
+                          <strong className="block text-slate-200">Tambahkan ke Data Ada (Append)</strong>
+                          <span className="text-[11px] text-slate-400">Data siswa saat ini tetap dipertahankan, data baru akan ditambahkan.</span>
+                        </div>
+                      </label>
+
+                      <label className={`p-3 rounded-xl border flex items-start gap-2.5 cursor-pointer transition-all ${
+                        importMode === 'replace' ? 'bg-rose-950/60 border-rose-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="importMode"
+                          value="replace"
+                          checked={importMode === 'replace'}
+                          onChange={() => setImportMode('replace')}
+                          className="mt-0.5 text-rose-600"
+                        />
+                        <div>
+                          <strong className="block text-slate-200">Ganti Seluruh Data (Replace)</strong>
+                          <span className="text-[11px] text-slate-400">Database siswa saat ini akan diganti seluruhnya dengan data Excel ini.</span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Errors / Warnings */}
+                  {importErrors.length > 0 && (
+                    <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-300 space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <AlertTriangle className="w-4 h-4 text-amber-400" />
+                        <span>Catatan Validasi ({importErrors.length}):</span>
+                      </div>
+                      <ul className="list-disc list-inside text-[11px] space-y-0.5 text-amber-400/90 max-h-24 overflow-y-auto">
+                        {importErrors.slice(0, 5).map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Preview Table */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                        Pratinjau Data Siswa ({importPreviewData.length} baris):
+                      </span>
+                      <span className="text-[11px] text-slate-500">Menampilkan hingga 5 baris pertama</span>
+                    </div>
+
+                    <div className="overflow-x-auto border border-slate-800 rounded-xl">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-950 text-slate-400 uppercase text-[10px]">
+                          <tr>
+                            <th className="py-2 px-3">No</th>
+                            <th className="py-2 px-3">Nama Siswa</th>
+                            <th className="py-2 px-3">NISN</th>
+                            <th className="py-2 px-3">Kelas</th>
+                            <th className="py-2 px-3">JK</th>
+                            <th className="py-2 px-3">Orang Tua / Wali</th>
+                            <th className="py-2 px-3">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                          {importPreviewData.slice(0, 5).map((item, idx) => (
+                            <tr key={idx} className="hover:bg-slate-800/30">
+                              <td className="py-2 px-3 font-mono text-slate-500">{idx + 1}</td>
+                              <td className="py-2 px-3 font-semibold text-white">{item.name}</td>
+                              <td className="py-2 px-3 font-mono text-slate-400">{item.nisn}</td>
+                              <td className="py-2 px-3 font-medium text-purple-300">Kelas {item.className}</td>
+                              <td className="py-2 px-3 text-slate-400">{item.gender}</td>
+                              <td className="py-2 px-3 text-slate-300">{item.parentName}</td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  item.activeStatus === 'Aktif' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/60' :
+                                  'bg-slate-800 text-slate-400'
+                                }`}>
+                                  {item.activeStatus}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+              >
+                Batal
+              </button>
+              {!importSuccessMsg && (
+                <button
+                  type="button"
+                  onClick={handleConfirmImport}
+                  disabled={importPreviewData.length === 0}
+                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-md shadow-purple-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Konfirmasi Simpan ({importPreviewData.length} Siswa)</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

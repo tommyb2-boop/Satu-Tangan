@@ -17,6 +17,7 @@ import { DynamicEntitiesModule } from './components/modules/DynamicEntitiesModul
 import { FingerprintAttendanceModule } from './components/modules/FingerprintAttendanceModule';
 import { ArchitectureDocsModal } from './components/ArchitectureDocsModal';
 import { AppSettingsModal } from './components/AppSettingsModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { RotateCcw, ShieldCheck, Heart } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -107,8 +108,10 @@ const MainAppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainAppContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <MainAppContent />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
