@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 import { 
   GraduationCap, 
   Lock, 
@@ -9,7 +10,8 @@ import {
   KeyRound, 
   ShieldCheck, 
   X,
-  School
+  School,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -19,6 +21,7 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
   const { loginWithEmail, loginWithGitHub } = useApp();
+  const { isInstallable, promptInstall } = usePWAInstall();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   
   const [email, setEmail] = useState('operator@satutangan.sch.id');
@@ -246,6 +249,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
                 <KeyRound className="w-3 h-3 text-indigo-400" />
                 <span>Gunakan Akun Demo Otomatis</span>
               </button>
+
+              {isInstallable && (
+                <button
+                  type="button"
+                  onClick={promptInstall}
+                  className="w-full py-1.5 px-3 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 text-[10px] font-semibold flex items-center justify-center gap-1.5 transition-colors animate-pulse"
+                >
+                  <Download className="w-3 h-3 text-emerald-400" />
+                  <span>Pasang Aplikasi di Android (PWA)</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
