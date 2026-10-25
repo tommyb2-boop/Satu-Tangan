@@ -1,10 +1,9 @@
 {
   "version": 2,
-  "cleanUrls": true,
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
@@ -19,7 +18,7 @@
       ]
     },
     {
-      "source": "/(sw\\.js|registerSW\\.js|manifest\\.webmanifest)",
+      "source": "/(sw\\.js|registerSW\\.js|manifest\\.webmanifest|workbox-.*\\.js)",
       "headers": [
         {
           "key": "Cache-Control",

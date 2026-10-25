@@ -15,10 +15,16 @@ export function usePWAInstall() {
 
   useEffect(() => {
     // Check if already running as installed standalone PWA / Android WebAPK
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
-      document.referrer.includes('android-app://');
+    let isStandalone = false;
+    try {
+      isStandalone = Boolean(
+        (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (typeof window !== 'undefined' && (window.navigator as unknown as { standalone?: boolean })?.standalone === true) ||
+        (typeof document !== 'undefined' && document.referrer && document.referrer.includes('android-app://'))
+      );
+    } catch {
+      isStandalone = false;
+    }
 
     if (isStandalone) {
       setIsInstalled(true);

@@ -127,10 +127,40 @@ interface AppContextType {
   restoreBackupData: (backupJsonString: string) => { success: boolean; message: string; stats?: { students: number; teachers: number; attendance: number; records: number } };
 }
 
+// Safe storage helper resilient to Android private browsing & storage quota errors
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return null;
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, value);
+      }
+    } catch (e) {
+      console.warn(`Gagal menyimpan ${key} ke localStorage:`, e);
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(key);
+      }
+    } catch (e) {
+      console.warn(`Gagal menghapus ${key} dari localStorage:`, e);
+    }
+  }
+};
+
 // Helper functions for fail-safe localStorage parsing
 const safeLoadOperator = (): OperatorUser | null => {
   try {
-    const saved = localStorage.getItem('satutangan_operator');
+    const saved = safeStorage.getItem('satutangan_operator');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_OPERATOR;
     const parsed = JSON.parse(saved);
     if (!parsed || typeof parsed !== 'object') return INITIAL_OPERATOR;
@@ -143,7 +173,7 @@ const safeLoadOperator = (): OperatorUser | null => {
 
 const safeLoadTeachers = (): Teacher[] => {
   try {
-    const saved = localStorage.getItem('satutangan_teachers');
+    const saved = safeStorage.getItem('satutangan_teachers');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_TEACHERS;
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_TEACHERS;
@@ -155,7 +185,7 @@ const safeLoadTeachers = (): Teacher[] => {
 
 const safeLoadStudents = (): Student[] => {
   try {
-    const saved = localStorage.getItem('satutangan_students');
+    const saved = safeStorage.getItem('satutangan_students');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_STUDENTS;
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_STUDENTS;
@@ -167,7 +197,7 @@ const safeLoadStudents = (): Student[] => {
 
 const safeLoadTeacherAttendance = (): TeacherAttendance[] => {
   try {
-    const saved = localStorage.getItem('satutangan_teacher_attendance');
+    const saved = safeStorage.getItem('satutangan_teacher_attendance');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_TEACHER_ATTENDANCE;
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed) ? parsed : INITIAL_TEACHER_ATTENDANCE;
@@ -179,7 +209,7 @@ const safeLoadTeacherAttendance = (): TeacherAttendance[] => {
 
 const safeLoadStudentAttendance = (): StudentAttendance[] => {
   try {
-    const saved = localStorage.getItem('satutangan_student_attendance');
+    const saved = safeStorage.getItem('satutangan_student_attendance');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_STUDENT_ATTENDANCE;
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed) ? parsed : INITIAL_STUDENT_ATTENDANCE;
@@ -191,7 +221,7 @@ const safeLoadStudentAttendance = (): StudentAttendance[] => {
 
 const safeLoadReportCards = (): Record<string, ReportCard> => {
   try {
-    const saved = localStorage.getItem('satutangan_report_cards');
+    const saved = safeStorage.getItem('satutangan_report_cards');
     if (!saved || saved === 'undefined' || saved === 'null') {
       return { 'std-01': INITIAL_REPORT_CARD };
     }
@@ -221,7 +251,7 @@ const safeLoadReportCards = (): Record<string, ReportCard> => {
 
 const safeLoadSchoolProfile = (): SchoolProfile => {
   try {
-    const saved = localStorage.getItem('satutangan_school_profile');
+    const saved = safeStorage.getItem('satutangan_school_profile');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_SCHOOL_PROFILE;
     const parsed = JSON.parse(saved);
     if (!parsed || typeof parsed !== 'object') return INITIAL_SCHOOL_PROFILE;
@@ -248,7 +278,7 @@ const safeLoadSchoolProfile = (): SchoolProfile => {
 
 const safeLoadDynamicEntities = (): DynamicEntity[] => {
   try {
-    const saved = localStorage.getItem('satutangan_dynamic_entities');
+    const saved = safeStorage.getItem('satutangan_dynamic_entities');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_DYNAMIC_ENTITIES;
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed) ? parsed : INITIAL_DYNAMIC_ENTITIES;
@@ -259,7 +289,7 @@ const safeLoadDynamicEntities = (): DynamicEntity[] => {
 
 const safeLoadDynamicRecords = (): DynamicRecord[] => {
   try {
-    const saved = localStorage.getItem('satutangan_dynamic_records');
+    const saved = safeStorage.getItem('satutangan_dynamic_records');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_DYNAMIC_RECORDS;
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed) ? parsed : INITIAL_DYNAMIC_RECORDS;
@@ -270,7 +300,7 @@ const safeLoadDynamicRecords = (): DynamicRecord[] => {
 
 const safeLoadPassword = (): string => {
   try {
-    const saved = localStorage.getItem('satutangan_operator_password');
+    const saved = safeStorage.getItem('satutangan_operator_password');
     return saved && typeof saved === 'string' && saved.length >= 4 ? saved : 'operator2026';
   } catch {
     return 'operator2026';
@@ -317,42 +347,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Persistence side-effects
   useEffect(() => {
-    localStorage.setItem('satutangan_school_profile', JSON.stringify(schoolProfile));
+    safeStorage.setItem('satutangan_school_profile', JSON.stringify(schoolProfile));
   }, [schoolProfile]);
   useEffect(() => {
     if (operator) {
-      localStorage.setItem('satutangan_operator', JSON.stringify(operator));
+      safeStorage.setItem('satutangan_operator', JSON.stringify(operator));
     } else {
-      localStorage.removeItem('satutangan_operator');
+      safeStorage.removeItem('satutangan_operator');
     }
   }, [operator]);
 
   useEffect(() => {
-    localStorage.setItem('satutangan_teachers', JSON.stringify(teachers));
+    safeStorage.setItem('satutangan_teachers', JSON.stringify(teachers));
   }, [teachers]);
 
   useEffect(() => {
-    localStorage.setItem('satutangan_students', JSON.stringify(students));
+    safeStorage.setItem('satutangan_students', JSON.stringify(students));
   }, [students]);
 
   useEffect(() => {
-    localStorage.setItem('satutangan_teacher_attendance', JSON.stringify(teacherAttendance));
+    safeStorage.setItem('satutangan_teacher_attendance', JSON.stringify(teacherAttendance));
   }, [teacherAttendance]);
 
   useEffect(() => {
-    localStorage.setItem('satutangan_student_attendance', JSON.stringify(studentAttendance));
+    safeStorage.setItem('satutangan_student_attendance', JSON.stringify(studentAttendance));
   }, [studentAttendance]);
 
   useEffect(() => {
-    localStorage.setItem('satutangan_report_cards', JSON.stringify(reportCards));
+    safeStorage.setItem('satutangan_report_cards', JSON.stringify(reportCards));
   }, [reportCards]);
 
   useEffect(() => {
-    localStorage.setItem('satutangan_dynamic_entities', JSON.stringify(dynamicEntities));
+    safeStorage.setItem('satutangan_dynamic_entities', JSON.stringify(dynamicEntities));
   }, [dynamicEntities]);
 
   useEffect(() => {
-    localStorage.setItem('satutangan_dynamic_records', JSON.stringify(dynamicRecords));
+    safeStorage.setItem('satutangan_dynamic_records', JSON.stringify(dynamicRecords));
   }, [dynamicRecords]);
 
   // Auth Handlers
@@ -732,7 +762,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: 'Kata sandi baru minimal 5 karakter.' };
     }
     setOperatorPassword(newPass);
-    localStorage.setItem('satutangan_operator_password', newPass);
+    safeStorage.setItem('satutangan_operator_password', newPass);
     return { success: true, message: 'Kata sandi login operator berhasil diperbarui!' };
   };
 

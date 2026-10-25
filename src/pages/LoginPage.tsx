@@ -15,6 +15,7 @@ import {
   Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { APP_LOGO_URL } from '../data/initialData';
 
 interface LoginPageProps {
   onOpenArchitecture?: () => void;
@@ -86,7 +87,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 shrink-0 overflow-hidden">
             <img 
-              src="/assets/aistudio/Gemini_Generated_Image_7fyqob7fyqob7fyq_ee286bdd.jpg" 
+              src={APP_LOGO_URL} 
               alt="Satu Tangan Guru" 
               className="w-full h-full object-cover rounded-[10px]"
             />
