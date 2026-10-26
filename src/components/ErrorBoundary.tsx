@@ -50,14 +50,16 @@ export class ErrorBoundary extends Component<Props, State> {
             {/* Logo & Icon */}
             <div className="flex items-center justify-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-sky-400 p-[1.5px] shadow-lg overflow-hidden shrink-0">
-                <img
-                  src={APP_LOGO_URL}
-                  alt="Satu Tangan"
-                  className="w-full h-full object-cover rounded-[14px]"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = 'none';
-                  }}
-                />
+                <div className="w-full h-full bg-[#f8f6ee] rounded-[14px] overflow-hidden">
+                  <img
+                    src={APP_LOGO_URL}
+                    alt="Satu Tangan"
+                    className="w-full h-full object-cover scale-[1.03]"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
                 <AlertTriangle className="w-6 h-6" />

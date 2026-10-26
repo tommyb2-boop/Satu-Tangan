@@ -9,8 +9,8 @@ if (container) {
   root.render(<App />);
 }
 
-// 2. Register Service Worker asynchronously in background without blocking initial paint
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+// 2. Register Service Worker asynchronously in background ONLY in production
+if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     import('virtual:pwa-register')
       .then(({ registerSW }) => {

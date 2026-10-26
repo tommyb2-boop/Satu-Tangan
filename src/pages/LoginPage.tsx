@@ -86,11 +86,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
       <header className="w-full max-w-sm flex items-center justify-between shrink-0 pt-1 pb-1">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 shrink-0 overflow-hidden">
-            <img 
-              src={APP_LOGO_URL} 
-              alt="Satu Tangan Guru" 
-              className="w-full h-full object-cover rounded-[10px]"
-            />
+            <div className="w-full h-full bg-[#f8f6ee] rounded-[10px] overflow-hidden">
+              <img 
+                src={APP_LOGO_URL} 
+                alt="Satu Tangan Guru" 
+                className="w-full h-full object-cover scale-[1.03]"
+              />
+            </div>
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5 leading-none">

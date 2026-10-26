@@ -13,6 +13,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { ModuleSkeleton } from './components/ModuleSkeleton';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { OfflineWarningToast } from './components/OfflineWarningToast';
 import { RotateCcw } from 'lucide-react';
 
 // Code-split heavy modules via React.lazy so Android mobile devices
@@ -78,8 +79,9 @@ const MainAppContent: React.FC = () => {
   // Render Protected Dashboard & Modules with Android mobile bottom navigation
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
-      {/* Offline Status Tracker */}
+      {/* Offline Status Tracker & Warning Toast */}
       <OfflineIndicator />
+      <OfflineWarningToast />
 
       {/* Top Bar Navigation */}
       <Header onOpenArchitecture={() => setIsArchitectureOpen(true)} />

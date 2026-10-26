@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { AndroidInstallModal } from './AndroidInstallModal';
+import { SyncStatusBadge } from './SyncStatusBadge';
 import { 
   LogOut, 
   FileCode2, 
@@ -37,11 +38,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
               title="Satu Tangan Guru - Beranda Utama"
             >
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-all duration-200 shrink-0">
-                <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center relative overflow-hidden">
+                <div className="w-full h-full bg-[#f8f6ee] rounded-[10px] flex items-center justify-center relative overflow-hidden">
                   <img 
                     src={APP_LOGO_URL} 
                     alt="Logo Aplikasi Satu Tangan Guru" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover scale-[1.03]"
                   />
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-slate-900 animate-pulse" />
                 </div>
@@ -64,7 +65,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
           </div>
 
           {/* Zone 2: Architecture Inspector, School Profile & Operator Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Sync Status Badge (Firebase / Cloud Real-time) */}
+            <SyncStatusBadge />
+
             {/* PWA Install Button for Mobile / Android / Desktop (hidden if already installed) */}
             {!isInstalled && (
               <button

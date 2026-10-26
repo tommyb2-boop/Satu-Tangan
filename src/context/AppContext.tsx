@@ -23,6 +23,7 @@ import {
   INITIAL_REPORT_CARD,
   TODAY_STR
 } from '../data/initialData';
+import { syncService } from '../services/syncService';
 
 export type ActiveModule =
   | 'dashboard'
@@ -528,6 +529,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notes: notes !== undefined ? notes : (existingIndex >= 0 ? prev[existingIndex].notes : '')
       };
 
+      syncService.enqueue('teacherAttendance', 'update', entry.id, entry);
+
       if (existingIndex >= 0) {
         const next = [...prev];
         next[existingIndex] = entry;
@@ -559,6 +562,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status,
         notes: notes !== undefined ? notes : (existingIndex >= 0 ? prev[existingIndex].notes : '')
       };
+
+      syncService.enqueue('studentAttendance', 'update', entry.id, entry);
 
       if (existingIndex >= 0) {
         const next = [...prev];
@@ -609,6 +614,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           notes: 'Terverifikasi Biometrik Sidik Jari (Mesin ' + deviceId + ')'
         };
 
+        syncService.enqueue('teacherAttendance', 'update', entry.id, entry);
+
         if (existingIndex >= 0) {
           const next = [...prev];
           next[existingIndex] = entry;
@@ -645,6 +652,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           deviceId,
           notes: 'Terverifikasi Biometrik Sidik Jari (Mesin ' + deviceId + ')'
         };
+
+        syncService.enqueue('studentAttendance', 'update', entry.id, entry);
 
         if (existingIndex >= 0) {
           const next = [...prev];

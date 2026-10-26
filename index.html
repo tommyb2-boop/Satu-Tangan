@@ -32,9 +32,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   </head>
-  <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white overscroll-none touch-manipulation">
+  <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
     <div id="root">
-      <!-- Instant Native-Style Loader to prevent white/blank screen on Android -->
+      <!-- Instant Native-Style Loader to prevent white/blank screen -->
       <div id="initial-mobile-loader" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #020617; color: #f8fafc; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; text-align: center; box-sizing: border-box;">
         <div style="position: relative; width: 72px; height: 72px; margin-bottom: 20px;">
           <img src="/pwa-192x192.png" alt="Satu Tangan" style="width: 100%; height: 100%; border-radius: 18px; box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4); object-fit: cover; display: block;" onerror="this.style.display='none'">
@@ -46,15 +46,6 @@
           <div style="width: 50%; height: 100%; background: linear-gradient(90deg, #6366f1, #38bdf8); border-radius: 9999px; animation: satutangan-load 1.2s infinite ease-in-out;"></div>
         </div>
         <p style="font-size: 11px; color: #64748b; margin-top: 12px;">Memuat aplikasi...</p>
-
-        <!-- Recovery Card shown if mobile browser takes too long or throws an error -->
-        <div id="boot-fallback-card" style="display: none; margin-top: 24px; max-width: 290px; background: rgba(15, 23, 42, 0.95); border: 1px solid #334155; border-radius: 16px; padding: 14px; text-align: center;">
-          <p style="font-size: 12px; color: #f87171; margin: 0 0 6px 0; font-weight: 600;">Memuat Terasa Lama?</p>
-          <p style="font-size: 11px; color: #94a3b8; margin: 0 0 10px 0; line-height: 1.4;">Ketuk tombol untuk membersihkan cache service worker & memuat ulang secara bersih.</p>
-          <button onclick="cleanAndReloadApp()" style="width: 100%; padding: 8px 12px; background: #4f46e5; color: #ffffff; border: none; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer;">
-            Bersihkan Cache & Segarkan
-          </button>
-        </div>
       </div>
       <style>
         @keyframes satutangan-load {
@@ -63,47 +54,6 @@
         }
       </style>
     </div>
-
-    <script>
-      function cleanAndReloadApp() {
-        try {
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(regs) {
-              for (var i = 0; i < regs.length; i++) {
-                regs[i].unregister();
-              }
-            });
-          }
-          if ('caches' in window) {
-            caches.keys().then(function(names) {
-              for (var i = 0; i < names.length; i++) {
-                caches.delete(names[i]);
-              }
-            });
-          }
-          try { localStorage.clear(); } catch(e){}
-        } catch (e) {
-          console.warn(e);
-        }
-        window.location.reload();
-      }
-
-      // Show recovery button after 5 seconds if app hasn't mounted
-      setTimeout(function() {
-        var card = document.getElementById('boot-fallback-card');
-        var loader = document.getElementById('initial-mobile-loader');
-        if (card && loader) {
-          card.style.display = 'block';
-        }
-      }, 5000);
-
-      window.addEventListener('error', function(e) {
-        var card = document.getElementById('boot-fallback-card');
-        if (card) {
-          card.style.display = 'block';
-        }
-      });
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
