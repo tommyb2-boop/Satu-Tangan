@@ -40,7 +40,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitec
     { id: 'absen-sidik-jari', label: 'Sidik Jari', icon: <Fingerprint className="w-5 h-5 text-emerald-400" /> },
     { id: 'absensi-guru', label: 'Guru', icon: <CalendarCheck2 className="w-5 h-5" /> },
     { id: 'absensi-siswa', label: 'Siswa', icon: <Users className="w-5 h-5" /> },
-    { id: 'cetak-raport', label: 'Raport', icon: <FileSpreadsheet className="w-5 h-5" /> },
+    { id: 'cetak-raport', label: 'Database Raport', icon: <FileSpreadsheet className="w-5 h-5 text-rose-400" /> },
   ];
 
   const allModules: { id: ActiveModule; label: string; desc: string; icon: React.ReactNode }[] = [
@@ -50,7 +50,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitec
     { id: 'absensi-siswa', label: 'Presensi Harian Siswa', desc: 'Rekap kehadiran per kelas', icon: <CalendarCheck2 className="w-5 h-5 text-teal-400" /> },
     { id: 'db-guru', label: 'Master Data Guru & Staf', desc: 'NIP, mapel, impor/ekspor Excel', icon: <Users className="w-5 h-5 text-amber-400" /> },
     { id: 'db-siswa', label: 'Master Data Siswa', desc: 'NISN, kelas, riwayat siswa', icon: <Database className="w-5 h-5 text-blue-400" /> },
-    { id: 'cetak-raport', label: 'Generator Raport Siswa', desc: 'Cetak PDF resmi & Kop Surat', icon: <FileSpreadsheet className="w-5 h-5 text-purple-400" /> },
+    { id: 'cetak-raport', label: 'Database Raport Siswa', desc: 'Semua tahun pelajaran, alumni, & buat raport baru', icon: <FileSpreadsheet className="w-5 h-5 text-rose-400" /> },
     { id: 'modul-dinamis', label: 'Modul Dinamis / Lain-lain', desc: 'Ekstrakurikuler, inventaris', icon: <Sparkles className="w-5 h-5 text-pink-400" /> },
   ];
 
@@ -59,7 +59,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenArchitec
       {/* Android Mobile Bottom Navigation Bar (Visible on mobile/tablet screens < xl) */}
       <nav 
         aria-label="Navigasi Seluler" 
-        className="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800/80 px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] xl:hidden shadow-2xl no-print"
+        className="fixed bottom-0 inset-x-0 z-40 bg-slate-900 border-t border-slate-800/80 px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] xl:hidden shadow-2xl no-print"
       >
         <div className="grid grid-cols-6 gap-1 items-center max-w-md mx-auto">
           {primaryTabs.map((item) => {

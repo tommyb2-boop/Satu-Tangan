@@ -9,11 +9,9 @@
   }
 }
 
-/* 3D Glassmorphism & Neumorphic Depth Utilities */
+/* 3D Glassmorphism & Neumorphic Depth Utilities - Optimized with solid fallbacks */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
     0 20px 40px -15px rgba(0, 0, 0, 0.07),
@@ -21,25 +19,39 @@
     0 1px 2px rgba(255, 255, 255, 0.9) inset;
 }
 
+@supports (backdrop-filter: blur(16px)) and (min-width: 640px) {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
 .glass-panel-dark {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(15, 23, 42, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 
-/* 3D Card Depth */
-.card-3d {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-style: preserve-3d;
-  perspective: 1000px;
+@supports (backdrop-filter: blur(16px)) and (min-width: 640px) {
+  .glass-panel-dark {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
 }
 
-.card-3d:hover {
-  transform: translateY(-6px) rotateX(2deg);
+/* 3D Card Depth - Clean standard CSS without layer promotion glitches */
+.card-3d {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-3d:hover {
+    transform: translateY(-4px);
+  }
 }
 
 .button-3d {

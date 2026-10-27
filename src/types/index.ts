@@ -123,6 +123,10 @@ export interface ReportCard {
   homeroomTeacherNip: string;
   issueDate: string;
   issueCity?: string;
+  studentName?: string;
+  studentNisn?: string;
+  className?: string;
+  statusSiswa?: 'Aktif' | 'Lulus' | 'Pindah';
 }
 
 export type EntityFieldType = 'currency' | 'text' | 'badge' | 'date';

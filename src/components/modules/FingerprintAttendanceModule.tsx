@@ -327,9 +327,7 @@ webView.addJavascriptInterface(new FingerprintBridge(this), "AndroidFingerprintB
       </div>
 
       {/* Biometric Terminal Hardware Hub (Dual-Method Selector) */}
-      <div className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-900/95 to-emerald-950/40 border border-emerald-500/40 shadow-2xl backdrop-blur-xl">
-        <div className="absolute right-0 top-0 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-
+      <div className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/40 shadow-2xl">
         {/* Method Selector Tabs */}
         <div className="flex flex-wrap items-center gap-2 pb-4 mb-4 border-b border-slate-800">
           <span className="text-xs font-semibold text-slate-400 mr-2">Metode Pemindai:</span>

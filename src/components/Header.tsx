@@ -6,9 +6,10 @@ import { SyncStatusBadge } from './SyncStatusBadge';
 import { 
   LogOut, 
   FileCode2, 
-  Github,
-  School,
-  Download
+  Github, 
+  School, 
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 import { APP_LOGO_URL } from '../data/initialData';
 
@@ -17,7 +18,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
-  const { operator, logout, setActiveTab, setIsSettingsOpen } = useApp();
+  const { operator, logout, activeTab, setActiveTab, setIsSettingsOpen } = useApp();
   const { 
     isInstallable, 
     isInstalled, 
@@ -28,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-30 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 no-print">
+      <header className="sticky top-0 z-30 w-full bg-slate-900 border-b border-slate-800 shadow-md no-print">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Zone 1: Wordmark & Brand with Application Logo */}
           <div className="flex items-center gap-2.5 shrink-0">
@@ -43,6 +44,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
                     src={APP_LOGO_URL} 
                     alt="Logo Aplikasi Satu Tangan Guru" 
                     className="w-full h-full object-cover scale-[1.03]"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
                   />
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-slate-900 animate-pulse" />
                 </div>
@@ -63,6 +67,83 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
               </div>
             </div>
           </div>
+
+          {/* Zone 1.5: Desktop Direct Module Navigation Tabs */}
+          <nav className="hidden xl:flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800/90 shadow-inner">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'dashboard'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              Beranda
+            </button>
+            <button
+              onClick={() => setActiveTab('absen-sidik-jari')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'absen-sidik-jari'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              Sidik Jari
+            </button>
+            <button
+              onClick={() => setActiveTab('absensi-guru')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'absensi-guru'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              Presensi Guru
+            </button>
+            <button
+              onClick={() => setActiveTab('absensi-siswa')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'absensi-siswa'
+                  ? 'bg-teal-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              Presensi Siswa
+            </button>
+            <button
+              onClick={() => setActiveTab('db-guru')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'db-guru'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              Database Guru
+            </button>
+            <button
+              onClick={() => setActiveTab('db-siswa')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'db-siswa'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              Database Siswa
+            </button>
+            <button
+              onClick={() => setActiveTab('cetak-raport')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'cetak-raport'
+                  ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/30 ring-1 ring-rose-400/50'
+                  : 'text-rose-300 hover:text-white hover:bg-rose-950/50 border border-rose-800/40 bg-rose-950/20'
+              }`}
+              title="Database Raport Siswa (Semua Tahun & Buat Raport Baru)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-rose-300" />
+              <span>Database Raport</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+            </button>
+          </nav>
 
           {/* Zone 2: Architecture Inspector, School Profile & Operator Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -106,12 +187,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
                 {operator.avatarUrl ? (
                   <img
                     src={operator.avatarUrl}
-                    alt={operator.name}
+                    alt={operator.name || 'Operator'}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-indigo-400/40 object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-[10px] sm:text-xs font-bold text-white shadow-inner">
-                    {operator.name.slice(0, 2).toUpperCase()}
+                    {(operator.name || 'OP').slice(0, 2).toUpperCase()}
                   </div>
                 )}
 

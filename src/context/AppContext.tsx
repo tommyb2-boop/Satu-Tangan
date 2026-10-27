@@ -21,6 +21,7 @@ import {
   INITIAL_DYNAMIC_ENTITIES,
   INITIAL_DYNAMIC_RECORDS,
   INITIAL_REPORT_CARD,
+  INITIAL_REPORT_CARDS,
   TODAY_STR
 } from '../data/initialData';
 import { syncService } from '../services/syncService';
@@ -89,6 +90,7 @@ interface AppContextType {
   // Report Cards
   reportCards: Record<string, ReportCard>;
   saveReportCard: (report: ReportCard) => void;
+  deleteReportCard: (reportId: string) => void;
   bulkSaveReportCards: (reports: Record<string, ReportCard>) => number;
 
   // Dynamic Entities & Records
@@ -189,7 +191,11 @@ const safeLoadStudents = (): Student[] => {
     const saved = safeStorage.getItem('satutangan_students');
     if (!saved || saved === 'undefined' || saved === 'null') return INITIAL_STUDENTS;
     const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_STUDENTS;
+    if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_STUDENTS;
+    // Merge any missing initial students (e.g. alumni std-10, std-11, std-12) so all years exist
+    const existingIds = new Set(parsed.map((s: Student) => s.id));
+    const missing = INITIAL_STUDENTS.filter(s => !existingIds.has(s.id));
+    return missing.length > 0 ? [...parsed, ...missing] : parsed;
   } catch (err) {
     console.warn('Gagal memuat siswa dari localStorage:', err);
     return INITIAL_STUDENTS;
@@ -224,13 +230,13 @@ const safeLoadReportCards = (): Record<string, ReportCard> => {
   try {
     const saved = safeStorage.getItem('satutangan_report_cards');
     if (!saved || saved === 'undefined' || saved === 'null') {
-      return { 'std-01': INITIAL_REPORT_CARD };
+      return INITIAL_REPORT_CARDS;
     }
     const parsed = JSON.parse(saved);
     if (!parsed || typeof parsed !== 'object') {
-      return { 'std-01': INITIAL_REPORT_CARD };
+      return INITIAL_REPORT_CARDS;
     }
-    const normalized: Record<string, ReportCard> = {};
+    const normalized: Record<string, ReportCard> = { ...INITIAL_REPORT_CARDS };
     for (const key of Object.keys(parsed)) {
       const card = parsed[key];
       if (card && typeof card === 'object') {
@@ -243,10 +249,10 @@ const safeLoadReportCards = (): Record<string, ReportCard> => {
         };
       }
     }
-    return Object.keys(normalized).length > 0 ? normalized : { 'std-01': INITIAL_REPORT_CARD };
+    return Object.keys(normalized).length > 0 ? normalized : INITIAL_REPORT_CARDS;
   } catch (err) {
     console.warn('Gagal memuat raport dari localStorage:', err);
-    return { 'std-01': INITIAL_REPORT_CARD };
+    return INITIAL_REPORT_CARDS;
   }
 };
 
@@ -674,12 +680,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Report Cards
+  // Report Cards (Database Raport Lintas Tahun Pelajaran)
   const saveReportCard = (report: ReportCard) => {
+    const key = report.id || `rep-${report.studentId}-${report.academicYear.replace(/[^a-zA-Z0-9]/g, '')}-${report.semester.toLowerCase()}`;
+    const preparedReport: ReportCard = {
+      ...report,
+      id: key
+    };
     setReportCards(prev => ({
       ...prev,
-      [report.studentId]: report
+      [key]: preparedReport,
+      [report.studentId]: preparedReport
     }));
+    syncService.enqueue('dynamicRecords', 'update', key, preparedReport);
+  };
+
+  const deleteReportCard = (reportId: string) => {
+    setReportCards(prev => {
+      const next = { ...prev };
+      delete next[reportId];
+      return next;
+    });
+    syncService.enqueue('dynamicRecords', 'delete', reportId, null);
   };
 
   const bulkSaveReportCards = (reports: Record<string, ReportCard>) => {
@@ -883,6 +905,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         recordFingerprintAttendance,
         reportCards,
         saveReportCard,
+        deleteReportCard,
         bulkSaveReportCards,
         dynamicEntities,
         dynamicRecords,

@@ -238,6 +238,48 @@ export const INITIAL_STUDENTS: Student[] = [
     parentPhone: '0811-9900-1122',
     address: 'Jl. Dago Asri No. 17, Bandung',
     activeStatus: 'Aktif'
+  },
+  {
+    id: 'std-10',
+    nisn: '0055198271',
+    nik: '3201121005050010',
+    name: 'Bagas Nugraha Pratama',
+    className: 'Alumni 9A',
+    gender: 'Laki-laki',
+    birthPlace: 'Bandung',
+    birthDate: '2008-05-10',
+    parentName: 'Rahmat Nugraha',
+    parentPhone: '0813-8899-7766',
+    address: 'Jl. Riau No. 45, Bandung',
+    activeStatus: 'Lulus'
+  },
+  {
+    id: 'std-11',
+    nisn: '0055198272',
+    nik: '3201124409050011',
+    name: 'Citra Kirana Anindita',
+    className: 'Alumni 9B',
+    gender: 'Perempuan',
+    birthPlace: 'Cimahi',
+    birthDate: '2008-09-14',
+    parentName: 'Agus Suryana, S.T.',
+    parentPhone: '0812-7766-5544',
+    address: 'Jl. Cihanjuang No. 88, Cimahi',
+    activeStatus: 'Lulus'
+  },
+  {
+    id: 'std-12',
+    nisn: '0044187160',
+    nik: '3201120301040012',
+    name: 'Dimas Arya Kusuma',
+    className: 'Alumni 9A',
+    gender: 'Laki-laki',
+    birthPlace: 'Bandung',
+    birthDate: '2007-01-03',
+    parentName: 'Kusuma Wardhana',
+    parentPhone: '0852-1144-7788',
+    address: 'Jl. Buah Batu No. 120, Bandung',
+    activeStatus: 'Lulus'
   }
 ];
 
@@ -377,38 +419,229 @@ export const INITIAL_DYNAMIC_RECORDS: DynamicRecord[] = [
   }
 ];
 
-export const INITIAL_REPORT_CARD: ReportCard = {
-  id: 'rep-01',
-  studentId: 'std-01',
-  academicYear: '2025/2026',
-  semester: 'Ganjil',
-  scores: [
-    { subjectId: 'sub-01', subjectName: 'Pendidikan Agama & Budi Pekerti', kkm: 75, nilaiTugas: 88, nilaiUts: 85, nilaiUas: 90, nilaiAkhir: 88, predikat: 'A', deskripsi: 'Sangat menguasai pemahaman adab dan pengamalan ibadah harian secara konsisten.' },
-    { subjectId: 'sub-02', subjectName: 'Pendidikan Pancasila & Kewarganegaraan', kkm: 75, nilaiTugas: 85, nilaiUts: 82, nilaiUas: 86, nilaiAkhir: 84, predikat: 'B', deskripsi: 'Memahami nilai-nilai musyawarah dan penegakan tata tertib sekolah dengan baik.' },
-    { subjectId: 'sub-03', subjectName: 'Bahasa Indonesia', kkm: 75, nilaiTugas: 86, nilaiUts: 88, nilaiUas: 87, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Sangat terampil dalam menyusun teks deskripsi dan presentasi lisan yang runtut.' },
-    { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 84, nilaiUts: 80, nilaiUas: 85, nilaiAkhir: 83, predikat: 'B', deskripsi: 'Mampu menyelesaikan persoalan aljabar dasar dan perbandingan dengan penalaran logis.' },
-    { subjectId: 'sub-05', subjectName: 'Ilmu Pengetahuan Alam (IPA)', kkm: 75, nilaiTugas: 90, nilaiUts: 88, nilaiUas: 92, nilaiAkhir: 90, predikat: 'A', deskripsi: 'Sangat mahir dalam praktikum mikroskop dan konsep klasifikasi makhluk hidup.' },
-    { subjectId: 'sub-06', subjectName: 'Ilmu Pengetahuan Sosial (IPS)', kkm: 75, nilaiTugas: 82, nilaiUts: 80, nilaiUas: 83, nilaiAkhir: 82, predikat: 'B', deskripsi: 'Memahami dinamika interaksi antarruang di wilayah Indonesia dengan baik.' },
-    { subjectId: 'sub-07', subjectName: 'Bahasa Inggris', kkm: 75, nilaiTugas: 87, nilaiUts: 85, nilaiUas: 88, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Aktif berkomunikasi dalam daily conversation dan reading comprehension.' },
-    { subjectId: 'sub-08', subjectName: 'Pendidikan Jasmani, Olahraga & Kesehatan', kkm: 75, nilaiTugas: 85, nilaiUts: 88, nilaiUas: 85, nilaiAkhir: 86, predikat: 'B', deskripsi: 'Memiliki kebugaran jasmani yang baik dan menguasai teknik bola basket dasar.' },
-    { subjectId: 'sub-09', subjectName: 'Seni Budaya & Prakarya', kkm: 75, nilaiTugas: 88, nilaiUts: 84, nilaiUas: 88, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Kreatif dalam memproduksi karya ragam hias dan kerajinan bahan lunak.' }
-  ],
-  sikapSpiritual: 'Sangat Baik',
-  sikapSosial: 'Sangat Baik',
-  extracurriculars: [
-    { name: 'Pramuka (Wajib)', score: 'A', notes: 'Menjabat sebagai Pratama Regu Rajawali, berdisiplin tinggi' },
-    { name: 'Klub Robotika & Coding', score: 'A', notes: 'Mengikuti proyek perakitan sensor Arduino dan logika dasar' }
-  ],
-  attendanceSummary: {
-    sakit: 1,
-    izin: 0,
-    alpa: 0
+export const INITIAL_REPORT_CARDS: Record<string, ReportCard> = {
+  'rep-std01-2025-ganjil': {
+    id: 'rep-std01-2025-ganjil',
+    studentId: 'std-01',
+    studentName: 'Aditya Pratama Putra',
+    studentNisn: '0089234120',
+    className: '7A',
+    statusSiswa: 'Aktif',
+    academicYear: '2025/2026',
+    semester: 'Ganjil',
+    scores: [
+      { subjectId: 'sub-01', subjectName: 'Pendidikan Agama & Budi Pekerti', kkm: 75, nilaiTugas: 88, nilaiUts: 85, nilaiUas: 90, nilaiAkhir: 88, predikat: 'A', deskripsi: 'Sangat menguasai pemahaman adab dan pengamalan ibadah harian secara konsisten.' },
+      { subjectId: 'sub-02', subjectName: 'Pendidikan Pancasila & Kewarganegaraan', kkm: 75, nilaiTugas: 85, nilaiUts: 82, nilaiUas: 86, nilaiAkhir: 84, predikat: 'B', deskripsi: 'Memahami nilai-nilai musyawarah dan penegakan tata tertib sekolah dengan baik.' },
+      { subjectId: 'sub-03', subjectName: 'Bahasa Indonesia', kkm: 75, nilaiTugas: 86, nilaiUts: 88, nilaiUas: 87, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Sangat terampil dalam menyusun teks deskripsi dan presentasi lisan yang runtut.' },
+      { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 84, nilaiUts: 80, nilaiUas: 85, nilaiAkhir: 83, predikat: 'B', deskripsi: 'Mampu menyelesaikan persoalan aljabar dasar dan perbandingan dengan penalaran logis.' },
+      { subjectId: 'sub-05', subjectName: 'Ilmu Pengetahuan Alam (IPA)', kkm: 75, nilaiTugas: 90, nilaiUts: 88, nilaiUas: 92, nilaiAkhir: 90, predikat: 'A', deskripsi: 'Sangat mahir dalam praktikum mikroskop dan konsep klasifikasi makhluk hidup.' },
+      { subjectId: 'sub-06', subjectName: 'Ilmu Pengetahuan Sosial (IPS)', kkm: 75, nilaiTugas: 82, nilaiUts: 80, nilaiUas: 83, nilaiAkhir: 82, predikat: 'B', deskripsi: 'Memahami dinamika interaksi antarruang di wilayah Indonesia dengan baik.' },
+      { subjectId: 'sub-07', subjectName: 'Bahasa Inggris', kkm: 75, nilaiTugas: 87, nilaiUts: 85, nilaiUas: 88, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Aktif berkomunikasi dalam daily conversation dan reading comprehension.' },
+      { subjectId: 'sub-08', subjectName: 'Pendidikan Jasmani, Olahraga & Kesehatan', kkm: 75, nilaiTugas: 85, nilaiUts: 88, nilaiUas: 85, nilaiAkhir: 86, predikat: 'B', deskripsi: 'Memiliki kebugaran jasmani yang baik dan menguasai teknik bola basket dasar.' },
+      { subjectId: 'sub-09', subjectName: 'Seni Budaya & Prakarya', kkm: 75, nilaiTugas: 88, nilaiUts: 84, nilaiUas: 88, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Kreatif dalam memproduksi karya ragam hias dan kerajinan bahan lunak.' }
+    ],
+    sikapSpiritual: 'Sangat Baik',
+    sikapSosial: 'Sangat Baik',
+    extracurriculars: [
+      { name: 'Pramuka (Wajib)', score: 'A', notes: 'Menjabat sebagai Pratama Regu Rajawali, berdisiplin tinggi' },
+      { name: 'Klub Robotika & Coding', score: 'A', notes: 'Mengikuti proyek perakitan sensor Arduino dan logika dasar' }
+    ],
+    attendanceSummary: { sakit: 1, izin: 0, alpa: 0 },
+    teacherNotes: 'Aditya menunjukkan integritas akademik yang sangat membanggakan dan jiwa kepemimpinan positif di kelas 7A.',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Siti Aminah, S.Pd., M.Si.',
+    homeroomTeacherNip: '19850315 200902 2 004',
+    issueDate: '2026-12-19',
+    issueCity: 'Kota Bandung'
   },
-  teacherNotes: 'Aditya menunjukkan integritas akademik yang sangat membanggakan dan jiwa kepemimpinan positif di kelas 7A.',
-  headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
-  headmasterNip: '19780512 200212 1 002',
-  homeroomTeacherName: 'Siti Aminah, S.Pd., M.Si.',
-  homeroomTeacherNip: '19850315 200902 2 004',
-  issueDate: '2026-12-19',
-  issueCity: 'Kota Bandung'
+  'rep-std01-2024-genap': {
+    id: 'rep-std01-2024-genap',
+    studentId: 'std-01',
+    studentName: 'Aditya Pratama Putra',
+    studentNisn: '0089234120',
+    className: '7A',
+    statusSiswa: 'Aktif',
+    academicYear: '2024/2025',
+    semester: 'Genap',
+    scores: [
+      { subjectId: 'sub-01', subjectName: 'Pendidikan Agama & Budi Pekerti', kkm: 75, nilaiTugas: 85, nilaiUts: 84, nilaiUas: 88, nilaiAkhir: 86, predikat: 'A', deskripsi: 'Menunjukkan pemahaman akidah yang sangat baik.' },
+      { subjectId: 'sub-02', subjectName: 'Pendidikan Pancasila & Kewarganegaraan', kkm: 75, nilaiTugas: 80, nilaiUts: 82, nilaiUas: 84, nilaiAkhir: 82, predikat: 'B', deskripsi: 'Mematuhi tata tertib dan toleran terhadap sesama.' },
+      { subjectId: 'sub-03', subjectName: 'Bahasa Indonesia', kkm: 75, nilaiTugas: 85, nilaiUts: 86, nilaiUas: 84, nilaiAkhir: 85, predikat: 'A', deskripsi: 'Terampil menulis teks ulasan cerpen dan karya sastra.' },
+      { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 80, nilaiUts: 78, nilaiUas: 82, nilaiAkhir: 80, predikat: 'B', deskripsi: 'Mampu menghitung keliling dan luas bidang datar.' },
+      { subjectId: 'sub-05', subjectName: 'Ilmu Pengetahuan Alam (IPA)', kkm: 75, nilaiTugas: 88, nilaiUts: 85, nilaiUas: 89, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Menguasai materi ekosistem dan rantai makanan.' }
+    ],
+    sikapSpiritual: 'Sangat Baik',
+    sikapSosial: 'Baik',
+    extracurriculars: [{ name: 'Pramuka (Wajib)', score: 'A', notes: 'Aktif dalam kemah kenaikan tingkat' }],
+    attendanceSummary: { sakit: 0, izin: 1, alpa: 0 },
+    teacherNotes: 'Tingkatkan lagi ketelitian dalam materi hitungan matematika.',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Siti Aminah, S.Pd., M.Si.',
+    homeroomTeacherNip: '19850315 200902 2 004',
+    issueDate: '2025-06-20',
+    issueCity: 'Kota Bandung'
+  },
+  'rep-std02-2025-ganjil': {
+    id: 'rep-std02-2025-ganjil',
+    studentId: 'std-02',
+    studentName: 'Annisa Fitriani Zahra',
+    studentNisn: '0089234121',
+    className: '7A',
+    statusSiswa: 'Aktif',
+    academicYear: '2025/2026',
+    semester: 'Ganjil',
+    scores: [
+      { subjectId: 'sub-01', subjectName: 'Pendidikan Agama & Budi Pekerti', kkm: 75, nilaiTugas: 92, nilaiUts: 90, nilaiUas: 95, nilaiAkhir: 93, predikat: 'A', deskripsi: 'Sangat istimewa dalam hafalan juz amma dan adab islami.' },
+      { subjectId: 'sub-03', subjectName: 'Bahasa Indonesia', kkm: 75, nilaiTugas: 90, nilaiUts: 88, nilaiUas: 92, nilaiAkhir: 90, predikat: 'A', deskripsi: 'Juara penulisan puisi tingkat sekolah.' },
+      { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 88, nilaiUts: 85, nilaiUas: 89, nilaiAkhir: 87, predikat: 'A', deskripsi: 'Sangat teliti dalam pengerjaan aljabar.' }
+    ],
+    sikapSpiritual: 'Sangat Baik',
+    sikapSosial: 'Sangat Baik',
+    extracurriculars: [{ name: 'PMR (Palang Merah Remaja)', score: 'A', notes: 'Petugas pertolongan pertama teladan' }],
+    attendanceSummary: { sakit: 0, izin: 0, alpa: 0 },
+    teacherNotes: 'Prestasi gemilang dan kehadiran sempurna (100%). Pertahankan!',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Siti Aminah, S.Pd., M.Si.',
+    homeroomTeacherNip: '19850315 200902 2 004',
+    issueDate: '2026-12-19',
+    issueCity: 'Kota Bandung'
+  },
+  'rep-std07-2025-ganjil': {
+    id: 'rep-std07-2025-ganjil',
+    studentId: 'std-07',
+    studentName: 'Farhan Maulana Hakim',
+    studentNisn: '0078129033',
+    className: '8A',
+    statusSiswa: 'Aktif',
+    academicYear: '2025/2026',
+    semester: 'Ganjil',
+    scores: [
+      { subjectId: 'sub-05', subjectName: 'Ilmu Pengetahuan Alam (IPA)', kkm: 75, nilaiTugas: 96, nilaiUts: 94, nilaiUas: 98, nilaiAkhir: 96, predikat: 'A', deskripsi: 'Peraih Medali Emas OSN IPA Tingkat Kota.' },
+      { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 90, nilaiUts: 88, nilaiUas: 92, nilaiAkhir: 90, predikat: 'A', deskripsi: 'Kemampuan analisis statistik dan geometri tinggi.' }
+    ],
+    sikapSpiritual: 'Sangat Baik',
+    sikapSosial: 'Sangat Baik',
+    extracurriculars: [{ name: 'Klub Sains Terpadu', score: 'A', notes: 'Ketua Tim Olimpiade Sains' }],
+    attendanceSummary: { sakit: 0, izin: 2, alpa: 0 },
+    teacherNotes: 'Kebanggaan sekolah atas torehan prestasi sains tingkat kota.',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Dewi Lestari, M.Hum.',
+    homeroomTeacherNip: '19881104 201210 2 003',
+    issueDate: '2026-12-19',
+    issueCity: 'Kota Bandung'
+  },
+  'rep-std10-2024-genap': {
+    id: 'rep-std10-2024-genap',
+    studentId: 'std-10',
+    studentName: 'Bagas Nugraha Pratama',
+    studentNisn: '0055198271',
+    className: '9A (Alumni)',
+    statusSiswa: 'Lulus',
+    academicYear: '2024/2025',
+    semester: 'Genap',
+    scores: [
+      { subjectId: 'sub-01', subjectName: 'Pendidikan Agama & Budi Pekerti', kkm: 75, nilaiTugas: 88, nilaiUts: 86, nilaiUas: 90, nilaiAkhir: 88, predikat: 'A', deskripsi: 'Telah menuntaskan seluruh kompetensi keagamaan dan budi pekerti jenjang SMP.' },
+      { subjectId: 'sub-02', subjectName: 'Pendidikan Pancasila & Kewarganegaraan', kkm: 75, nilaiTugas: 85, nilaiUts: 85, nilaiUas: 88, nilaiAkhir: 86, predikat: 'B', deskripsi: 'Memiliki komitmen kebangsaan dan keteladanan organisasi OSIS.' },
+      { subjectId: 'sub-03', subjectName: 'Bahasa Indonesia', kkm: 75, nilaiTugas: 88, nilaiUts: 87, nilaiUas: 89, nilaiAkhir: 88, predikat: 'A', deskripsi: 'Tuntas uji literasi dan penulisan karya ilmiah sederhana kelulusan.' },
+      { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 85, nilaiUts: 82, nilaiUas: 87, nilaiAkhir: 85, predikat: 'B', deskripsi: 'Menguasai persamaan kuadrat dan peluang dengan baik.' },
+      { subjectId: 'sub-05', subjectName: 'Ilmu Pengetahuan Alam (IPA)', kkm: 75, nilaiTugas: 89, nilaiUts: 88, nilaiUas: 90, nilaiAkhir: 89, predikat: 'A', deskripsi: 'Sangat baik dalam pengujian listrik statis dan kemagnetan.' },
+      { subjectId: 'sub-07', subjectName: 'Bahasa Inggris', kkm: 75, nilaiTugas: 86, nilaiUts: 85, nilaiUas: 87, nilaiAkhir: 86, predikat: 'B', deskripsi: 'Mampu berpidato bahasa Inggris dalam perpisahan kelulusan.' }
+    ],
+    sikapSpiritual: 'Sangat Baik',
+    sikapSosial: 'Sangat Baik',
+    extracurriculars: [
+      { name: 'OSIS', score: 'A', notes: 'Ketua Umum OSIS Periode 2024/2025, sukses menyelenggarakan Pensi' },
+      { name: 'Futsal', score: 'A', notes: 'Kapten Tim Futsal Sekolah' }
+    ],
+    attendanceSummary: { sakit: 1, izin: 1, alpa: 0 },
+    teacherNotes: 'Dinyatakan LULUS dari jenjang SMP dengan predikat AMAT BAIK. Selamat melanjutkan ke jenjang SMA/SMK impian!',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Dewi Lestari, M.Hum.',
+    homeroomTeacherNip: '19881104 201210 2 003',
+    issueDate: '2025-06-15',
+    issueCity: 'Kota Bandung'
+  },
+  'rep-std10-2024-ganjil': {
+    id: 'rep-std10-2024-ganjil',
+    studentId: 'std-10',
+    studentName: 'Bagas Nugraha Pratama',
+    studentNisn: '0055198271',
+    className: '9A (Alumni)',
+    statusSiswa: 'Lulus',
+    academicYear: '2024/2025',
+    semester: 'Ganjil',
+    scores: [
+      { subjectId: 'sub-01', subjectName: 'Pendidikan Agama & Budi Pekerti', kkm: 75, nilaiTugas: 86, nilaiUts: 84, nilaiUas: 88, nilaiAkhir: 86, predikat: 'A', deskripsi: 'Konsisten beribadah dan bertutur kata sopan.' },
+      { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 82, nilaiUts: 80, nilaiUas: 84, nilaiAkhir: 82, predikat: 'B', deskripsi: 'Paham fungsi kuadrat dan transformasi geometri.' }
+    ],
+    sikapSpiritual: 'Sangat Baik',
+    sikapSosial: 'Sangat Baik',
+    extracurriculars: [{ name: 'OSIS', score: 'A', notes: 'Terpilih sebagai formatur pengurus OSIS' }],
+    attendanceSummary: { sakit: 0, izin: 1, alpa: 0 },
+    teacherNotes: 'Memasuki semester akhir kelas 9, pertahankan konsistensi belajarmu.',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Dewi Lestari, M.Hum.',
+    homeroomTeacherNip: '19881104 201210 2 003',
+    issueDate: '2024-12-20',
+    issueCity: 'Kota Bandung'
+  },
+  'rep-std11-2024-genap': {
+    id: 'rep-std11-2024-genap',
+    studentId: 'std-11',
+    studentName: 'Citra Kirana Anindita',
+    studentNisn: '0055198272',
+    className: '9B (Alumni)',
+    statusSiswa: 'Lulus',
+    academicYear: '2024/2025',
+    semester: 'Genap',
+    scores: [
+      { subjectId: 'sub-03', subjectName: 'Bahasa Indonesia', kkm: 75, nilaiTugas: 92, nilaiUts: 90, nilaiUas: 94, nilaiAkhir: 92, predikat: 'A', deskripsi: 'Sangat terampil dalam debat bahasa dan retorika sastra.' },
+      { subjectId: 'sub-07', subjectName: 'Bahasa Inggris', kkm: 75, nilaiTugas: 95, nilaiUts: 94, nilaiUas: 96, nilaiAkhir: 95, predikat: 'A', deskripsi: 'Skor TOEFL Junior tertinggi se-angkatan.' }
+    ],
+    sikapSpiritual: 'Sangat Baik',
+    sikapSosial: 'Sangat Baik',
+    extracurriculars: [{ name: 'English Club', score: 'A', notes: 'Best Speaker English Debate Contest' }],
+    attendanceSummary: { sakit: 0, izin: 0, alpa: 0 },
+    teacherNotes: 'Dinyatakan LULUS dengan predikat Bintang Prestasi Bahasa. Sukses selalu Citra!',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Bambang Pamungkas, S.Pd.',
+    homeroomTeacherNip: '19810410 200801 1 015',
+    issueDate: '2025-06-15',
+    issueCity: 'Kota Bandung'
+  },
+  'rep-std12-2023-genap': {
+    id: 'rep-std12-2023-genap',
+    studentId: 'std-12',
+    studentName: 'Dimas Arya Kusuma',
+    studentNisn: '0044187160',
+    className: '9A (Alumni)',
+    statusSiswa: 'Lulus',
+    academicYear: '2023/2024',
+    semester: 'Genap',
+    scores: [
+      { subjectId: 'sub-08', subjectName: 'Pendidikan Jasmani, Olahraga & Kesehatan', kkm: 75, nilaiTugas: 96, nilaiUts: 95, nilaiUas: 98, nilaiAkhir: 96, predikat: 'A', deskripsi: 'Atlet bulutangkis andalan sekolah, fisik luar biasa.' },
+      { subjectId: 'sub-04', subjectName: 'Matematika', kkm: 72, nilaiTugas: 82, nilaiUts: 80, nilaiUas: 84, nilaiAkhir: 82, predikat: 'B', deskripsi: 'Menyelesaikan ujian akhir matematika dengan baik.' }
+    ],
+    sikapSpiritual: 'Baik',
+    sikapSosial: 'Sangat Baik',
+    extracurriculars: [{ name: 'Badminton Club', score: 'A', notes: 'Juara 1 O2SN Badminton Tingkat Kota 2024' }],
+    attendanceSummary: { sakit: 2, izin: 2, alpa: 0 },
+    teacherNotes: 'Dinyatakan LULUS. Diterima di SMA Negeri 3 Bandung melalui jalur prestasi olahraga.',
+    headmasterName: 'Drs. H. Ahmad Fauzi, M.Pd.',
+    headmasterNip: '19780512 200212 1 002',
+    homeroomTeacherName: 'Bayu Wicaksono, S.Pd.',
+    homeroomTeacherNip: '19960205 202203 1 009',
+    issueDate: '2024-06-15',
+    issueCity: 'Kota Bandung'
+  }
 };
+
+export const INITIAL_REPORT_CARD: ReportCard = INITIAL_REPORT_CARDS['rep-std01-2025-ganjil'];
+

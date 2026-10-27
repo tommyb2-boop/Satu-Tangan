@@ -134,17 +134,18 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
     },
     {
       id: 'cetak-raport',
-      title: 'Cetak Raport',
-      subtitle: 'Penilaian & PDF',
-      description: 'Input nilai mata pelajaran, KKM, penilaian sikap, dan cetak dokumen Raport resmi format PDF.',
-      statValue: 'Siap Cetak',
-      statLabel: 'Format PDF & Print',
-      bgGradient: 'from-rose-600/25 via-red-900/40 to-slate-900/95',
-      cardBorder: 'border-rose-500/30 hover:border-rose-400',
-      glowColor: 'group-hover:shadow-[0_20px_50px_rgba(244,63,94,0.3)]',
-      iconBg: 'bg-gradient-to-tr from-rose-500 to-red-400 text-white shadow-lg shadow-rose-500/40',
+      title: 'Database Raport Siswa',
+      subtitle: 'Semua Tahun, Nilai Baru & Cetak Massal',
+      description: 'Database raport siswa seluruh tahun pelajaran (termasuk alumni), tombol cetak di sisi kiri siswa, formulir nilai baru tahun berjalan, serta sub-menu cetak semua raport per kelas atau beberapa anak pilihan.',
+      statValue: '3 Sub-Menu',
+      statLabel: 'Database, Buat Baru & Cetak Massal',
+      bgGradient: 'from-rose-600/30 via-red-900/45 to-slate-900/95',
+      cardBorder: 'border-rose-500/40 hover:border-rose-400',
+      glowColor: 'group-hover:shadow-[0_20px_50px_rgba(244,63,94,0.35)]',
+      iconBg: 'bg-gradient-to-tr from-rose-500 to-red-400 text-white shadow-lg shadow-rose-500/40 ring-2 ring-rose-400/30',
       icon: <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />,
-      tag: 'Raport PDF'
+      tag: 'Database & Cetak Massal',
+      isHighlighted: true
     },
     {
       id: 'modul-dinamis',
@@ -185,12 +186,9 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
-      {/* Hero Welcome Banner with 3D Depth Glassmorphism */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 bg-gradient-to-r from-indigo-950/80 via-slate-900/90 to-purple-950/80 border border-slate-700/60 shadow-xl backdrop-blur-xl">
-        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute right-1/3 -bottom-20 w-72 h-72 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
-
+    <div className="space-y-6 sm:space-y-8">
+      {/* Hero Welcome Banner - Clean gradient without clipped blurred layers */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border border-slate-700/60 shadow-xl">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
           <div className="flex items-start gap-4 max-w-2xl">
             <button
@@ -204,6 +202,9 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
                   src={schoolProfile.logoUrl} 
                   alt="Logo Sekolah" 
                   className="w-full h-full object-contain rounded-xl"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                  }}
                 />
               ) : (
                 <School className="w-8 h-8 text-indigo-400 group-hover:text-indigo-300" />
