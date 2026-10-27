@@ -8,7 +8,7 @@ export type SyncState = 'synced' | 'syncing' | 'offline' | 'error';
 
 export interface QueuedSyncItem {
   id: string;
-  collection: 'teachers' | 'students' | 'teacherAttendance' | 'studentAttendance' | 'dynamicRecords' | 'schoolProfile';
+  collection: 'teachers' | 'students' | 'teacherAttendance' | 'studentAttendance' | 'reportCards' | 'dynamicEntities' | 'dynamicRecords' | 'schoolProfile';
   action: 'create' | 'update' | 'delete' | 'mark-attendance';
   payload: unknown;
   timestamp: string;

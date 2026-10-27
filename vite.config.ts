@@ -17,7 +17,9 @@ export default defineConfig(() => {
           'apple-touch-icon.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
+          'pwa-maskable-192x192.png',
           'pwa-maskable-512x512.png',
+          'assets/aistudio/logo_cropped.png',
         ],
         manifest: {
           id: '/',
@@ -25,7 +27,7 @@ export default defineConfig(() => {
           short_name: 'Satu Tangan',
           description: 'Aplikasi terpusat pengolah data siswa, guru, presensi sidik jari & cetak raport praktis.',
           theme_color: '#020617',
-          background_color: '#020617',
+          background_color: '#fcf5eb',
           display: 'standalone',
           orientation: 'any',
           start_url: '/',
@@ -43,6 +45,12 @@ export default defineConfig(() => {
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
+            },
+            {
+              src: '/pwa-maskable-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable',
             },
             {
               src: '/pwa-maskable-512x512.png',
@@ -140,6 +148,10 @@ export default defineConfig(() => {
       },
     },
     server: {
+      port: 3000,
+      host: '0.0.0.0',
+      strictPort: true,
+      allowedHosts: true,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},

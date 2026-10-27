@@ -20,6 +20,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { getLogoDataUrlForPdf } from '../../../utils/pdfLogoHelper';
 
 interface RaportBulkPrintTabProps {
   reportCards: Record<string, ReportCard>;
@@ -199,7 +200,7 @@ export const RaportBulkPrintTab: React.FC<RaportBulkPrintTabProps> = ({
   };
 
   // Handler: Unduh File PDF Gabungan Semua Siswa (Multi-halaman jsPDF)
-  const handleDownloadBulkPdf = () => {
+  const handleDownloadBulkPdf = async () => {
     if (targetStudentsToPrint.length === 0) {
       alert('Pilih minimal 1 siswa untuk membuat PDF massal.');
       return;
@@ -208,6 +209,9 @@ export const RaportBulkPrintTab: React.FC<RaportBulkPrintTabProps> = ({
     setIsGeneratingPdf(true);
 
     try {
+      // Siapkan logo sekolah format base64 PNG resolusi tinggi sekali untuk seluruh halaman
+      const logoDataUrl = await getLogoDataUrlForPdf(schoolProfile.logoUrl);
+
       const doc = new jsPDF('p', 'mm', 'a4');
       const total = targetStudentsToPrint.length;
 
@@ -221,6 +225,15 @@ export const RaportBulkPrintTab: React.FC<RaportBulkPrintTabProps> = ({
         const studentNisn = report.studentNisn || student.nisn;
         const className = report.className || student.className;
         const studentStatus = report.statusSiswa || student.activeStatus;
+
+        // Render Logo Sekolah pada Kop Surat Setiap Halaman PDF
+        if (logoDataUrl) {
+          try {
+            doc.addImage(logoDataUrl, 'PNG', 16, 11, 21, 21, undefined, 'FAST');
+          } catch (err) {
+            console.warn('[PDF Bulk Logo] Gagal render logo:', err);
+          }
+        }
 
         // Header Kop Surat
         doc.setFont('helvetica', 'bold');

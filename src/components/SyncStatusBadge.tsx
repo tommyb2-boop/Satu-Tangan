@@ -132,6 +132,22 @@ export const SyncStatusBadge: React.FC = () => {
                 </span>
               </div>
 
+              {/* Offline-First Database Status */}
+              <div className="p-3 bg-indigo-950/40 rounded-xl border border-indigo-500/30">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-300">
+                    <Database className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Basis Data: Offline-First</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
+                    IndexedDB Aktif
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  Semua input data guru, siswa, presensi sidik jari, dan raport tersimpan instan di penyimpanan perangkat lokal terlebih dahulu (aman tanpa internet), lalu otomatis disinkronkan ke cloud.
+                </p>
+              </div>
+
               {/* Last Sync */}
               <div className="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
                 <span className="text-xs text-slate-400">Sinkronisasi Terakhir:</span>

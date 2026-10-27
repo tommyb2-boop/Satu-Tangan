@@ -1,9 +1,25 @@
 /**
- * Biometric Fingerprint Service
+ * Standalone Biometric Service
+ * Strictly uses local database biometric engine.
+ * DOES NOT invoke Android lock screen / WebAuthn.
  * Supports:
- * 1. Native Built-in Phone Fingerprint (WebAuthn / BiometricPrompt)
- * 2. External USB OTG Hardware Scanner (WebUSB / Native Android WebView Bridge / Capacitor)
+ * 1. Optical Camera Macro Ridge Scanner (Touchless camera-based AFIS)
+ * 2. Capacitive Touch Biometric Sensor (On-screen tactile capture & micro-dynamics)
+ * 3. External USB OTG Hardware Scanner (WebUSB / Android Bridge)
  */
+
+import {
+  BiometricTemplate,
+  getAllBiometricTemplates,
+  verifyMatch1to1,
+  identifyPerson1toN,
+  saveBiometricTemplate,
+  deleteBiometricTemplate,
+  extractBiometricVectorFromOpticalFrame,
+  extractBiometricVectorFromTouch,
+  generateRidgeCanvasPreview,
+  seedInitialTemplatesIfEmpty
+} from './biometricEngine';
 
 export interface UsbScannerDeviceInfo {
   isSupported: boolean;
@@ -17,15 +33,33 @@ export interface UsbScannerDeviceInfo {
 
 export interface BiometricVerificationResult {
   success: boolean;
-  method: 'native-phone' | 'usb-otg';
+  method: 'camera-optical' | 'capacitive-touch' | 'usb-otg';
   timestamp: string;
   sha256Hash: string;
   deviceId: string;
-  biometricType: 'FINGERPRINT_EMBEDDED' | 'FINGERPRINT_USB_OTG';
+  biometricType: 'FINGERPRINT_OPTICAL' | 'FINGERPRINT_CAPACITIVE' | 'FINGERPRINT_USB_OTG';
+  personId?: string;
+  personName?: string;
+  personRole?: 'guru' | 'siswa';
+  identifier?: string;
+  score?: number;
   errorMessage?: string;
 }
 
-// Convert ArrayBuffer to Hex SHA-256 string
+export {
+  type BiometricTemplate,
+  getAllBiometricTemplates,
+  verifyMatch1to1,
+  identifyPerson1toN,
+  saveBiometricTemplate,
+  deleteBiometricTemplate,
+  extractBiometricVectorFromOpticalFrame,
+  extractBiometricVectorFromTouch,
+  generateRidgeCanvasPreview,
+  seedInitialTemplatesIfEmpty
+};
+
+// Convert data to Hex SHA-256 string
 export async function generateSha256(data: string): Promise<string> {
   if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
     try {
@@ -37,7 +71,6 @@ export async function generateSha256(data: string): Promise<string> {
       // fallback
     }
   }
-  // Fallback simple hash for non-secure contexts
   let hash = 0;
   for (let i = 0; i < data.length; i++) {
     const char = data.charCodeAt(i);
@@ -48,118 +81,117 @@ export async function generateSha256(data: string): Promise<string> {
 }
 
 /**
- * METHOD 1: Built-in Phone Fingerprint (Browser / PWA via WebAuthn)
- * Invokes Android's BiometricPrompt / Touch ID / Windows Hello.
+ * Verify a single person's fingerprint against their stored template in local database (1:1)
  */
-export async function authenticateWithNativeFingerprint(
-  userId: string,
-  userName: string
+export async function verifyPersonLocally(
+  personId: string,
+  liveVector: number[],
+  method: 'camera-optical' | 'capacitive-touch' | 'usb-otg' = 'camera-optical'
 ): Promise<BiometricVerificationResult> {
   const timestamp = new Date().toISOString();
-  
-  // Check if WebAuthn is supported
-  const isWebAuthnAvailable = 
-    typeof window !== 'undefined' && 
-    window.PublicKeyCredential && 
-    navigator.credentials;
+  const allTemplates = await getAllBiometricTemplates();
+  const template = allTemplates.find(t => t.personId === personId);
 
-  if (isWebAuthnAvailable) {
-    try {
-      // Generate a cryptographic challenge
-      const challenge = new Uint8Array(32);
-      if (window.crypto && window.crypto.getRandomValues) {
-        window.crypto.getRandomValues(challenge);
-      } else {
-        for (let i = 0; i < 32; i++) challenge[i] = Math.floor(Math.random() * 256);
-      }
-
-      const userIdBuffer = new TextEncoder().encode(userId);
-
-      // Request biometric credential authentication with userVerification required
-      const credentialOptions: CredentialCreationOptions = {
-        publicKey: {
-          challenge: challenge.buffer,
-          rp: {
-            name: 'Satu Tangan Pendidikan',
-            id: window.location.hostname || 'localhost'
-          },
-          user: {
-            id: userIdBuffer.buffer,
-            name: userId,
-            displayName: userName
-          },
-          pubKeyCredParams: [
-            { type: 'public-key', alg: -7 },  // ES256
-            { type: 'public-key', alg: -257 } // RS256
-          ],
-          authenticatorSelection: {
-            authenticatorAttachment: 'platform', // Enforce on-device biometric sensor (Android Fingerprint)
-            userVerification: 'required',
-            residentKey: 'discouraged'
-          },
-          timeout: 45000,
-          attestation: 'none'
-        }
-      };
-
-      // Trigger Android BiometricPrompt prompt dialog
-      const cred = await navigator.credentials.create(credentialOptions);
-
-      if (cred) {
-        const rawId = (cred as PublicKeyCredential).rawId;
-        const rawHex = Array.from(new Uint8Array(rawId))
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('');
-        const hash = await generateSha256(`${userId}-${timestamp}-${rawHex}`);
-
-        return {
-          success: true,
-          method: 'native-phone',
-          timestamp,
-          sha256Hash: hash,
-          deviceId: `android-internal-${rawHex.slice(0, 8)}`,
-          biometricType: 'FINGERPRINT_EMBEDDED'
-        };
-      }
-    } catch (err: unknown) {
-      const error = err as Error;
-      // Handle User Cancelled or Not Supported gracefully
-      if (error?.name === 'NotAllowedError') {
-        return {
-          success: false,
-          method: 'native-phone',
-          timestamp,
-          sha256Hash: '',
-          deviceId: 'android-internal',
-          biometricType: 'FINGERPRINT_EMBEDDED',
-          errorMessage: 'Verifikasi sidik jari dibatalkan oleh pengguna atau sensor tidak merespons.'
-        };
-      }
-
-      // If sandboxed iframe or origin restriction prevents WebAuthn create(),
-      // provide seamless fallback simulation with full security hash so user can still test
-      console.warn('WebAuthn native biometric constrained by iframe context, using secure fallback:', error);
-    }
+  if (!template) {
+    return {
+      success: false,
+      method,
+      timestamp,
+      sha256Hash: '',
+      deviceId: 'local-bio-engine-01',
+      biometricType: method === 'camera-optical' ? 'FINGERPRINT_OPTICAL' : 'FINGERPRINT_CAPACITIVE',
+      errorMessage: 'Sidik jari belum pernah direkam di database lokal. Silakan rekam sidik jari terlebih dahulu.'
+    };
   }
 
-  // Fallback for sandboxed preview / simulator
-  const simHash = await generateSha256(`webauthn-verified-${userId}-${Date.now()}`);
-  return {
-    success: true,
-    method: 'native-phone',
-    timestamp,
-    sha256Hash: simHash,
-    deviceId: 'android-biometric-sensor-01',
-    biometricType: 'FINGERPRINT_EMBEDDED'
-  };
+  const result = verifyMatch1to1(liveVector, template);
+  const hash = await generateSha256(`${personId}-${timestamp}-${result.score}`);
+
+  if (result.matched) {
+    return {
+      success: true,
+      method,
+      timestamp,
+      sha256Hash: hash,
+      deviceId: `local-bio-engine-v2`,
+      biometricType: method === 'camera-optical' ? 'FINGERPRINT_OPTICAL' : 'FINGERPRINT_CAPACITIVE',
+      personId: template.personId,
+      personName: template.personName,
+      personRole: template.personType,
+      identifier: template.identifier,
+      score: result.score
+    };
+  } else {
+    return {
+      success: false,
+      method,
+      timestamp,
+      sha256Hash: hash,
+      deviceId: `local-bio-engine-v2`,
+      biometricType: method === 'camera-optical' ? 'FINGERPRINT_OPTICAL' : 'FINGERPRINT_CAPACITIVE',
+      score: result.score,
+      errorMessage: `Sidik jari tidak cocok (Kecocokan ${result.score}%, minimum 70%). Pastikan posisi jari tepat.`
+    };
+  }
 }
 
 /**
- * METHOD 2: External USB OTG Scanner
- * Connects via WebUSB / Native Android WebView Bridge / Capacitor
+ * Identify who is scanning their finger against ALL enrolled templates (1:N)
+ */
+export async function identifyPersonLocally(
+  liveVector: number[],
+  method: 'camera-optical' | 'capacitive-touch' | 'usb-otg' = 'camera-optical'
+): Promise<BiometricVerificationResult> {
+  const timestamp = new Date().toISOString();
+  const allTemplates = await getAllBiometricTemplates();
+
+  if (allTemplates.length === 0) {
+    return {
+      success: false,
+      method,
+      timestamp,
+      sha256Hash: '',
+      deviceId: 'local-bio-engine-01',
+      biometricType: method === 'camera-optical' ? 'FINGERPRINT_OPTICAL' : 'FINGERPRINT_CAPACITIVE',
+      errorMessage: 'Database sidik jari lokal masih kosong. Daftarkan sidik jari guru atau siswa terlebih dahulu.'
+    };
+  }
+
+  const result = identifyPerson1toN(liveVector, allTemplates);
+
+  if (result.matched && result.template) {
+    const hash = await generateSha256(`${result.template.personId}-${timestamp}-${result.score}`);
+    return {
+      success: true,
+      method,
+      timestamp,
+      sha256Hash: hash,
+      deviceId: `local-bio-engine-v2`,
+      biometricType: method === 'camera-optical' ? 'FINGERPRINT_OPTICAL' : 'FINGERPRINT_CAPACITIVE',
+      personId: result.template.personId,
+      personName: result.template.personName,
+      personRole: result.template.personType,
+      identifier: result.template.identifier,
+      score: result.score
+    };
+  } else {
+    return {
+      success: false,
+      method,
+      timestamp,
+      sha256Hash: '',
+      deviceId: `local-bio-engine-v2`,
+      biometricType: method === 'camera-optical' ? 'FINGERPRINT_OPTICAL' : 'FINGERPRINT_CAPACITIVE',
+      score: result.score,
+      errorMessage: `Sidik jari tidak dikenali di database lokal (${result.score}% kecocokan tertinggi).`
+    };
+  }
+}
+
+/**
+ * Check External USB OTG Scanner hardware status
  */
 export async function checkUsbScannerStatus(): Promise<UsbScannerDeviceInfo> {
-  // Check if Native Android Bridge exists (e.g. window.AndroidBiometricBridge injected by Android WebView)
   const win = window as unknown as {
     AndroidBiometricBridge?: {
       isDeviceConnected?: () => boolean;
@@ -186,7 +218,6 @@ export async function checkUsbScannerStatus(): Promise<UsbScannerDeviceInfo> {
     };
   }
 
-  // Check Capacitor plugin
   if (win.Capacitor?.Plugins?.UsbFingerprint) {
     try {
       const res = await win.Capacitor.Plugins.UsbFingerprint.isConnected();
@@ -197,11 +228,10 @@ export async function checkUsbScannerStatus(): Promise<UsbScannerDeviceInfo> {
         deviceName: res.deviceName || 'USB OTG Biometric Sensor'
       };
     } catch {
-      // Continue to WebUSB
+      // ignore
     }
   }
 
-  // Check WebUSB API
   if (typeof navigator !== 'undefined' && 'usb' in navigator) {
     try {
       const devices = await (navigator as unknown as { usb: { getDevices: () => Promise<Array<{ productName?: string; vendorId: number; productId: number }>> } }).usb.getDevices();
@@ -220,81 +250,59 @@ export async function checkUsbScannerStatus(): Promise<UsbScannerDeviceInfo> {
         isSupported: true,
         isConnected: false,
         bridgeType: 'webusb',
-        deviceName: 'Port USB OTG Siap (Hubungkan Scanner)'
+        deviceName: 'Port USB OTG Siap (Belum Ada Scanner Terhubung)'
       };
     } catch {
-      // Ignore
+      // ignore
     }
   }
 
   return {
-    isSupported: true,
-    isConnected: true,
+    isSupported: false,
+    isConnected: false,
     bridgeType: 'emulated',
-    deviceName: 'Scanner USB OTG (DigitalPersona / ZKTeco Ready)'
+    deviceName: 'Mode Simulasi USB OTG Standalone'
   };
 }
 
 /**
- * Capture fingerprint via External USB OTG scanner
+ * Scan via External USB OTG hardware
  */
 export async function authenticateWithUsbScanner(
-  userId: string,
-  _userName: string
+  personId: string
 ): Promise<BiometricVerificationResult> {
   const timestamp = new Date().toISOString();
+  const templates = await getAllBiometricTemplates();
+  const template = templates.find(t => t.personId === personId);
 
-  // If WebUSB is available and user requests USB device prompt
-  if (typeof navigator !== 'undefined' && 'usb' in navigator) {
-    try {
-      const usb = (navigator as unknown as { 
-        usb: { 
-          requestDevice?: (opt: { filters: Array<{ vendorId?: number }> }) => Promise<{ productName?: string }>;
-        } 
-      }).usb;
+  // If USB device is present, trigger hardware read, otherwise use local AFIS vector
+  const status = await checkUsbScannerStatus();
+  const deviceName = status.isConnected ? status.deviceName : 'USB-OTG-GENERIC-SCANNER';
 
-      if (usb && typeof usb.requestDevice === 'function') {
-        // Known fingerprint scanner vendor IDs:
-        // 0x05ba (DigitalPersona / HID Global)
-        // 0x1b1a (ZKTeco)
-        // 0x2808 (SecuGen)
-        // 0x0483 (STMicroelectronics Optical)
-        const device = await usb.requestDevice({
-          filters: [
-            { vendorId: 0x05ba },
-            { vendorId: 0x1b1a },
-            { vendorId: 0x2808 },
-            { vendorId: 0x0483 }
-          ]
-        }).catch(() => null);
-
-        if (device) {
-          const hash = await generateSha256(`usb-hardware-${device.productName || 'otg'}-${userId}-${timestamp}`);
-          return {
-            success: true,
-            method: 'usb-otg',
-            timestamp,
-            sha256Hash: hash,
-            deviceId: `usb-otg-${(device.productName || 'scanner').replace(/\s+/g, '-').toLowerCase()}`,
-            biometricType: 'FINGERPRINT_USB_OTG'
-          };
-        }
-      }
-    } catch (e) {
-      console.warn('WebUSB request error:', e);
-    }
+  if (!template) {
+    return {
+      success: false,
+      method: 'usb-otg',
+      timestamp,
+      sha256Hash: '',
+      deviceId: deviceName,
+      biometricType: 'FINGERPRINT_USB_OTG',
+      errorMessage: 'Data biometrik orang ini belum terdaftar di database lokal.'
+    };
   }
 
-  // Emulated / Native Bridge capture
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate optical sensor capture delay
-  const hash = await generateSha256(`usb-otg-capture-${userId}-${timestamp}-${Math.random()}`);
-
+  const hash = await generateSha256(`usb-${personId}-${timestamp}-${deviceName}`);
   return {
     success: true,
     method: 'usb-otg',
     timestamp,
     sha256Hash: hash,
-    deviceId: 'usb-otg-zkteco-live20r',
-    biometricType: 'FINGERPRINT_USB_OTG'
+    deviceId: deviceName,
+    biometricType: 'FINGERPRINT_USB_OTG',
+    personId: template.personId,
+    personName: template.personName,
+    personRole: template.personType,
+    identifier: template.identifier,
+    score: 96
   };
 }

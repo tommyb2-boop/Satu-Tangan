@@ -25,6 +25,7 @@ import {
   TODAY_STR
 } from '../data/initialData';
 import { syncService } from '../services/syncService';
+import { offlineDb, OfflineDbStats } from '../services/offlineDb';
 
 export type ActiveModule =
   | 'dashboard'
@@ -128,6 +129,7 @@ interface AppContextType {
   resetAllDatabase: (mode?: 'demo' | 'empty') => void;
   exportBackupData: () => string;
   restoreBackupData: (backupJsonString: string) => { success: boolean; message: string; stats?: { students: number; teachers: number; attendance: number; records: number } };
+  getOfflineDbStats: () => Promise<OfflineDbStats>;
 }
 
 // Safe storage helper resilient to Android private browsing & storage quota errors
@@ -352,10 +354,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [dynamicRecords, setDynamicRecords] = useState<DynamicRecord[]>(safeLoadDynamicRecords);
 
-  // Persistence side-effects
+  // Offline-First Database Persistence side-effects (Dual-Store: localStorage for 0ms reads + IndexedDB for durability)
   useEffect(() => {
     safeStorage.setItem('satutangan_school_profile', JSON.stringify(schoolProfile));
+    offlineDb.saveItem('schoolProfile', schoolProfile);
   }, [schoolProfile]);
+
   useEffect(() => {
     if (operator) {
       safeStorage.setItem('satutangan_operator', JSON.stringify(operator));
@@ -366,31 +370,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     safeStorage.setItem('satutangan_teachers', JSON.stringify(teachers));
+    offlineDb.saveCollection('teachers', teachers);
   }, [teachers]);
 
   useEffect(() => {
     safeStorage.setItem('satutangan_students', JSON.stringify(students));
+    offlineDb.saveCollection('students', students);
   }, [students]);
 
   useEffect(() => {
     safeStorage.setItem('satutangan_teacher_attendance', JSON.stringify(teacherAttendance));
+    offlineDb.saveCollection('teacherAttendance', teacherAttendance);
   }, [teacherAttendance]);
 
   useEffect(() => {
     safeStorage.setItem('satutangan_student_attendance', JSON.stringify(studentAttendance));
+    offlineDb.saveCollection('studentAttendance', studentAttendance);
   }, [studentAttendance]);
 
   useEffect(() => {
     safeStorage.setItem('satutangan_report_cards', JSON.stringify(reportCards));
+    const cardArray = Object.keys(reportCards).map(k => ({ ...reportCards[k], id: k }));
+    offlineDb.saveCollection('reportCards', cardArray);
   }, [reportCards]);
 
   useEffect(() => {
     safeStorage.setItem('satutangan_dynamic_entities', JSON.stringify(dynamicEntities));
+    offlineDb.saveCollection('dynamicEntities', dynamicEntities);
   }, [dynamicEntities]);
 
   useEffect(() => {
     safeStorage.setItem('satutangan_dynamic_records', JSON.stringify(dynamicRecords));
+    offlineDb.saveCollection('dynamicRecords', dynamicRecords);
   }, [dynamicRecords]);
+
+  // Initial mount: ensure IndexedDB offline stores are seeded
+  useEffect(() => {
+    offlineDb.init().then(async (db) => {
+      if (!db) return;
+      try {
+        const storedStudents = await offlineDb.getAll<Student>('students');
+        if (storedStudents.length === 0 && students.length > 0) {
+          await offlineDb.saveCollection('students', students);
+          await offlineDb.saveCollection('teachers', teachers);
+          await offlineDb.saveCollection('teacherAttendance', teacherAttendance);
+          await offlineDb.saveCollection('studentAttendance', studentAttendance);
+          await offlineDb.saveItem('schoolProfile', schoolProfile);
+        }
+      } catch (err) {
+        console.warn('[OfflineDB] Seeding info:', err);
+      }
+    });
+  }, []);
 
   // Auth Handlers
   const loginWithEmail = (email: string, pass: string): boolean => {
@@ -437,14 +468,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...teacherData
     };
     setTeachers(prev => [newTeacher, ...prev]);
+    syncService.enqueue('teachers', 'create', newTeacher.id, newTeacher);
   };
 
   const updateTeacher = (id: string, updated: Partial<Teacher>) => {
     setTeachers(prev => prev.map(t => (t.id === id ? { ...t, ...updated } : t)));
+    syncService.enqueue('teachers', 'update', id, updated);
   };
 
   const deleteTeacher = (id: string) => {
     setTeachers(prev => prev.filter(t => t.id !== id));
+    syncService.enqueue('teachers', 'delete', id, null);
   };
 
   const bulkAddTeachers = (newTeachers: Omit<Teacher, 'id'>[], mode: 'append' | 'replace' = 'append') => {
@@ -460,6 +494,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return [...generated, ...prev];
     });
+    syncService.enqueue('teachers', 'update', 'bulk-teachers', { count, mode });
     return count;
   };
 
@@ -470,6 +505,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...studentData
     };
     setStudents(prev => [newStudent, ...prev]);
+    syncService.enqueue('students', 'create', newStudent.id, newStudent);
   };
 
   const updateStudent = (id: string, updated: Partial<Student>) => {
@@ -493,12 +529,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return next;
     });
+    syncService.enqueue('students', 'update', id, updated);
   };
 
   const deleteStudent = (id: string) => {
     setStudents(prev => prev.filter(s => s.id !== id));
     // Remove orphaned records or keep history
     setDynamicRecords(prev => prev.filter(r => r.studentId !== id));
+    syncService.enqueue('students', 'delete', id, null);
   };
 
   const bulkAddStudents = (newStudents: Omit<Student, 'id'>[], mode: 'append' | 'replace' = 'append') => {
@@ -514,6 +552,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return [...generated, ...prev];
     });
+    syncService.enqueue('students', 'update', 'bulk-students', { count, mode });
     return count;
   };
 
@@ -692,7 +731,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       [key]: preparedReport,
       [report.studentId]: preparedReport
     }));
-    syncService.enqueue('dynamicRecords', 'update', key, preparedReport);
+    syncService.enqueue('reportCards', 'update', key, preparedReport);
   };
 
   const deleteReportCard = (reportId: string) => {
@@ -701,7 +740,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       delete next[reportId];
       return next;
     });
-    syncService.enqueue('dynamicRecords', 'delete', reportId, null);
+    syncService.enqueue('reportCards', 'delete', reportId, null);
   };
 
   const bulkSaveReportCards = (reports: Record<string, ReportCard>) => {
@@ -710,6 +749,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev,
       ...reports
     }));
+    syncService.enqueue('reportCards', 'update', 'bulk-reports', { count });
     return count;
   };
 
@@ -721,11 +761,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: TODAY_STR
     };
     setDynamicEntities(prev => [...prev, newEntity]);
+    syncService.enqueue('dynamicEntities', 'create', newEntity.id, newEntity);
   };
 
   const deleteDynamicEntity = (entityId: string) => {
     setDynamicEntities(prev => prev.filter(e => e.id !== entityId));
     setDynamicRecords(prev => prev.filter(r => r.entityId !== entityId));
+    syncService.enqueue('dynamicEntities', 'delete', entityId, null);
   };
 
   // Adding record with AUTO-SYNCHRONIZATION to Student Database
@@ -757,10 +799,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setDynamicRecords(prev => [newRecord, ...prev]);
+    syncService.enqueue('dynamicRecords', 'create', newRecord.id, newRecord);
   };
 
   const deleteDynamicRecord = (recordId: string) => {
     setDynamicRecords(prev => prev.filter(r => r.id !== recordId));
+    syncService.enqueue('dynamicRecords', 'delete', recordId, null);
   };
 
   const resetDemoData = () => {
@@ -773,6 +817,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setReportCards({ 'std-01': INITIAL_REPORT_CARD });
     setSchoolProfile(INITIAL_SCHOOL_PROFILE);
     setOperatorPassword('operator2026');
+    offlineDb.clearAll();
   };
 
   // 1. Update School Profile (Synchronizes to operator header and all reports)
@@ -780,6 +825,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSchoolProfile(prev => {
       const next = { ...prev, ...updated };
       setOperator(curr => curr ? { ...curr, schoolName: next.schoolName, npsn: next.npsn } : curr);
+      syncService.enqueue('schoolProfile', 'update', 'current', next);
       return next;
     });
   };
@@ -924,7 +970,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isSettingsOpen,
         setIsSettingsOpen,
         settingsActiveTab,
-        setSettingsActiveTab
+        setSettingsActiveTab,
+        getOfflineDbStats: () => offlineDb.getStats()
       }}
     >
       {children}

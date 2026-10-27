@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ReportCard, Student, SchoolProfile } from '../../../types';
-import { Printer, Download, ArrowLeft, School, Award, QrCode } from 'lucide-react';
+import { Printer, Download, ArrowLeft, School, Award, QrCode, RefreshCw } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { getLogoDataUrlForPdf } from '../../../utils/pdfLogoHelper';
 
 interface RaportPrintDocumentProps {
   report: ReportCard;
@@ -16,6 +17,7 @@ export const RaportPrintDocument: React.FC<RaportPrintDocumentProps> = ({
   schoolProfile,
   onBackToDatabase
 }) => {
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const studentName = report.studentName || student?.name || 'Peserta Didik';
   const studentNisn = report.studentNisn || student?.nisn || '-';
   const className = report.className || student?.className || '7A';
@@ -25,12 +27,24 @@ export const RaportPrintDocument: React.FC<RaportPrintDocumentProps> = ({
     window.print();
   };
 
-  const handleDownloadPdf = () => {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    
-    // Header Kop Surat
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      // Gambar Logo Sekolah pada Kop Surat PDF
+      const logoDataUrl = await getLogoDataUrlForPdf(schoolProfile.logoUrl);
+      if (logoDataUrl) {
+        try {
+          doc.addImage(logoDataUrl, 'PNG', 16, 13, 23, 23, undefined, 'FAST');
+        } catch (err) {
+          console.warn('[PDF Logo] Gagal render logo ke PDF:', err);
+        }
+      }
+
+      // Header Kop Surat
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
     doc.text((schoolProfile.letterheadProvince || 'PEMERINTAH DAERAH PROVINSI').toUpperCase(), 105, 16, { align: 'center' });
     doc.text((schoolProfile.letterheadAgency || 'DINAS PENDIDIKAN & KEBUDAYAAN').toUpperCase(), 105, 21, { align: 'center' });
     doc.setFontSize(13);
@@ -103,6 +117,12 @@ export const RaportPrintDocument: React.FC<RaportPrintDocumentProps> = ({
     doc.text(`NIP. ${report.headmasterNip}`, 105, y + 4, { align: 'center' });
 
     doc.save(`Raport_${studentName.replace(/\s+/g, '_')}_${report.academicYear.replace('/', '-')}_${report.semester}.pdf`);
+    } catch (err) {
+      console.error('[PDF Export] Gagal menyimpan PDF:', err);
+      alert('Terjadi kendala saat menghasilkan dokumen PDF.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   return (
@@ -130,11 +150,21 @@ export const RaportPrintDocument: React.FC<RaportPrintDocumentProps> = ({
 
           <button
             onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
             type="button"
-            className="py-2.5 px-4 bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/30"
+            className="py-2.5 px-4 bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/30"
           >
-            <Download className="w-4 h-4" />
-            <span>Unduh PDF Resmi</span>
+            {isDownloadingPdf ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                <span>Membuat PDF & Logo...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                <span>Unduh PDF Resmi</span>
+              </>
+            )}
           </button>
         </div>
       </div>

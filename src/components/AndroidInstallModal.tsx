@@ -33,12 +33,12 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({
         {/* Modal Header */}
         <div className="p-5 bg-gradient-to-r from-indigo-950 via-slate-900 to-emerald-950 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 p-[1.5px] shadow-lg shadow-indigo-500/25 shrink-0">
-              <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center overflow-hidden">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 shrink-0">
+              <div className="w-full h-full bg-[#f8f6ee] rounded-[14px] flex items-center justify-center overflow-hidden">
                 <img
                   src="/pwa-192x192.png"
                   alt="Logo Satu Tangan"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover scale-[1.03]"
                 />
               </div>
             </div>

@@ -1,0 +1,39 @@
+{
+  "id": "/",
+  "name": "Satu Tangan - Aplikasi Operator Pendidikan",
+  "short_name": "Satu Tangan",
+  "description": "Aplikasi terpusat pengolah data siswa, guru, presensi sidik jari & cetak raport praktis.",
+  "theme_color": "#020617",
+  "background_color": "#fcf5eb",
+  "display": "standalone",
+  "orientation": "any",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
