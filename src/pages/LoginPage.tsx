@@ -22,7 +22,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
-  const { loginWithEmail, loginWithGitHub } = useApp();
+  const { loginWithEmail, loginWithGitHub, setIsNewDeviceModalOpen } = useApp();
   const { 
     isInstallable, 
     isInstalled, 
@@ -263,7 +263,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onOpenArchitecture }) => {
               {!isInstalled && (
                 <button
                   type="button"
-                  onClick={promptInstall}
+                  onClick={() => setIsNewDeviceModalOpen(true)}
                   className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-950/80 to-teal-950/80 hover:from-emerald-900 hover:to-teal-900 text-emerald-300 border border-emerald-600/60 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />

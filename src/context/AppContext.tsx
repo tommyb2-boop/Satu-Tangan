@@ -130,6 +130,11 @@ interface AppContextType {
   exportBackupData: () => string;
   restoreBackupData: (backupJsonString: string) => { success: boolean; message: string; stats?: { students: number; teachers: number; attendance: number; records: number } };
   getOfflineDbStats: () => Promise<OfflineDbStats>;
+
+  // New Device Welcome & Local Database Setup Modal
+  isNewDeviceModalOpen: boolean;
+  setIsNewDeviceModalOpen: (open: boolean) => void;
+  closeNewDeviceModal: () => void;
 }
 
 // Safe storage helper resilient to Android private browsing & storage quota errors
@@ -348,6 +353,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Settings Modal State (Triggered by Logo Satu Tangan -> Profil)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsActiveTab, setSettingsActiveTab] = useState<'profil-sekolah' | 'password-login' | 'backup-restore' | 'reset-database'>('profil-sekolah');
+
+  // New Device Welcome & Local Database Setup Modal (Auto opens on first visit on a new device)
+  const [isNewDeviceModalOpen, setIsNewDeviceModalOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return !safeStorage.getItem('satutangan_device_setup_v1');
+  });
+
+  const closeNewDeviceModal = () => {
+    safeStorage.setItem('satutangan_device_setup_v1', 'acknowledged');
+    setIsNewDeviceModalOpen(false);
+  };
 
   // Dynamic Entities & Records
   const [dynamicEntities, setDynamicEntities] = useState<DynamicEntity[]>(safeLoadDynamicEntities);
@@ -971,7 +987,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsSettingsOpen,
         settingsActiveTab,
         setSettingsActiveTab,
-        getOfflineDbStats: () => offlineDb.getStats()
+        getOfflineDbStats: () => offlineDb.getStats(),
+        isNewDeviceModalOpen,
+        setIsNewDeviceModalOpen,
+        closeNewDeviceModal
       }}
     >
       {children}

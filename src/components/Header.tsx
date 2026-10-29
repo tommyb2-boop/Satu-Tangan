@@ -18,7 +18,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
-  const { operator, logout, activeTab, setActiveTab, setIsSettingsOpen } = useApp();
+  const { operator, logout, activeTab, setActiveTab, setIsSettingsOpen, setIsNewDeviceModalOpen } = useApp();
   const { 
     isInstallable, 
     isInstalled, 
@@ -153,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
             {/* PWA Install Button for Mobile / Android / Desktop (hidden if already installed) */}
             {!isInstalled && (
               <button
-                onClick={promptInstall}
+                onClick={() => setIsNewDeviceModalOpen(true)}
                 className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900/90 border border-emerald-500/60 rounded-xl transition-all shadow-md shadow-emerald-950/50 active:scale-95 cursor-pointer"
                 title="Pasang Aplikasi Satu Tangan di Android"
               >

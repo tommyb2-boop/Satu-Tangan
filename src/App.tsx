@@ -14,6 +14,8 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { ModuleSkeleton } from './components/ModuleSkeleton';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OfflineWarningToast } from './components/OfflineWarningToast';
+import { NewDeviceWelcomeModal } from './components/NewDeviceWelcomeModal';
+import { usePWAInstall } from './hooks/usePWAInstall';
 import { RotateCcw } from 'lucide-react';
 
 // Code-split heavy modules via React.lazy so Android mobile devices
@@ -58,8 +60,26 @@ const DynamicEntitiesModule = React.lazy(() =>
 );
 
 const MainAppContent: React.FC = () => {
-  const { operator, activeTab, resetDemoData } = useApp();
+  const { 
+    operator, 
+    activeTab, 
+    resetDemoData, 
+    isNewDeviceModalOpen, 
+    closeNewDeviceModal 
+  } = useApp();
+  const { 
+    isInstallable, 
+    isInstalled, 
+    isAndroid, 
+    isIOS, 
+    promptInstall 
+  } = usePWAInstall();
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
+
+  const handleInstallApp = async () => {
+    closeNewDeviceModal();
+    await promptInstall();
+  };
 
   // ROUTE PROTECTION GUARD:
   // If no operator is logged in, unconditionally render the Login Page!
@@ -71,6 +91,16 @@ const MainAppContent: React.FC = () => {
         <ArchitectureDocsModal
           isOpen={isArchitectureOpen}
           onClose={() => setIsArchitectureOpen(false)}
+        />
+        {/* New Device Local Database & Install Modal on First Launch */}
+        <NewDeviceWelcomeModal
+          isOpen={isNewDeviceModalOpen}
+          onClose={closeNewDeviceModal}
+          onInstall={handleInstallApp}
+          isInstallable={isInstallable}
+          isInstalled={isInstalled}
+          isAndroid={isAndroid}
+          isIOS={isIOS}
         />
       </>
     );
@@ -113,6 +143,17 @@ const MainAppContent: React.FC = () => {
 
       {/* Global Application Settings & School Profile Modal */}
       <AppSettingsModal />
+
+      {/* New Device Local Database & Install Modal */}
+      <NewDeviceWelcomeModal
+        isOpen={isNewDeviceModalOpen}
+        onClose={closeNewDeviceModal}
+        onInstall={handleInstallApp}
+        isInstallable={isInstallable}
+        isInstalled={isInstalled}
+        isAndroid={isAndroid}
+        isIOS={isIOS}
+      />
 
       {/* Quiet Footer (Hidden on small mobile screens to prevent clutter, accessible via drawer) */}
       <footer className="border-t border-slate-900 bg-slate-950/80 py-5 px-4 sm:px-6 lg:px-8 text-xs text-slate-500 no-print hidden xl:block">
