@@ -25,7 +25,7 @@ import { generateTeacherTemplate, parseTeacherExcel } from '../../utils/excelUti
 import confetti from 'canvas-confetti';
 
 export const TeacherDatabaseModule: React.FC = () => {
-  const { teachers, addTeacher, updateTeacher, deleteTeacher, bulkAddTeachers, setActiveTab } = useApp();
+  const { teachers, addTeacher, updateTeacher, deleteTeacher, bulkAddTeachers, setActiveTab, schoolProfile, setIsSettingsOpen } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
@@ -53,11 +53,13 @@ export const TeacherDatabaseModule: React.FC = () => {
     phone: '',
     employmentStatus: 'PNS',
     gender: 'Laki-laki',
-    assignedClass: ''
+    assignedClass: '',
+    activeStatus: 'Aktif'
   });
   const [formError, setFormError] = useState('');
 
   // Metrics
+  const activeTeachers = teachers.filter(t => !t.activeStatus || t.activeStatus === 'Aktif');
   const pnsCount = teachers.filter(t => t.employmentStatus === 'PNS').length;
   const pppkCount = teachers.filter(t => t.employmentStatus === 'PPPK').length;
   const honorerCount = teachers.filter(t => t.employmentStatus === 'Honorer' || t.employmentStatus === 'Yayasan').length;
@@ -70,6 +72,11 @@ export const TeacherDatabaseModule: React.FC = () => {
     
     if (!matchesSearch) return false;
     if (filterStatus !== 'ALL' && t.employmentStatus !== filterStatus) return false;
+
+    // Filter inactive teachers based on Profile Setting
+    if (!schoolProfile?.showInactiveData) {
+      if (t.activeStatus && t.activeStatus !== 'Aktif') return false;
+    }
 
     return true;
   });
@@ -84,7 +91,8 @@ export const TeacherDatabaseModule: React.FC = () => {
       phone: '',
       employmentStatus: 'PNS',
       gender: 'Laki-laki',
-      assignedClass: ''
+      assignedClass: '',
+      activeStatus: 'Aktif'
     });
     setFormError('');
     setIsModalOpen(true);
@@ -100,7 +108,8 @@ export const TeacherDatabaseModule: React.FC = () => {
       phone: teacher.phone,
       employmentStatus: teacher.employmentStatus,
       gender: teacher.gender,
-      assignedClass: teacher.assignedClass || ''
+      assignedClass: teacher.assignedClass || '',
+      activeStatus: teacher.activeStatus || 'Aktif'
     });
     setFormError('');
     setIsModalOpen(true);
@@ -268,19 +277,47 @@ export const TeacherDatabaseModule: React.FC = () => {
 
       {/* Filter and Search Bar */}
       <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
-          <Briefcase className="w-3.5 h-3.5 text-amber-400" />
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-transparent text-white font-medium text-xs py-1 focus:outline-none"
-          >
-            <option value="ALL" className="bg-slate-900">Semua Status Kepegawaian</option>
-            <option value="PNS" className="bg-slate-900">PNS</option>
-            <option value="PPPK" className="bg-slate-900">PPPK</option>
-            <option value="Honorer" className="bg-slate-900">Honorer</option>
-            <option value="Yayasan" className="bg-slate-900">Yayasan</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs">
+            <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-transparent text-white font-medium text-xs py-1 focus:outline-none"
+            >
+              <option value="ALL" className="bg-slate-900">Semua Status Kepegawaian</option>
+              <option value="PNS" className="bg-slate-900">PNS</option>
+              <option value="PPPK" className="bg-slate-900">PPPK</option>
+              <option value="Honorer" className="bg-slate-900">Honorer</option>
+              <option value="Yayasan" className="bg-slate-900">Yayasan</option>
+            </select>
+          </div>
+
+          {schoolProfile?.showInactiveData ? (
+            <div className="flex items-center gap-1.5 bg-amber-950/40 border border-amber-600/40 rounded-xl px-2.5 py-1 text-xs text-amber-300">
+              <span className="font-semibold text-[11px]">Semua Guru Ditampilkan (Termasuk Purna Tugas)</span>
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-[10px] text-amber-400 hover:text-amber-300 underline ml-0.5"
+              >
+                (Ubah di Profil)
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-600/40 rounded-xl px-2.5 py-1 text-xs text-emerald-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-semibold text-[11px]">Hanya Guru Aktif ({filteredTeachers.length} guru)</span>
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-0.5"
+                title="Buka Pengaturan Profil untuk menampilkan semua data termasuk pensiun"
+              >
+                (Ubah di Profil)
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="relative min-w-[260px]">
@@ -343,13 +380,28 @@ export const TeacherDatabaseModule: React.FC = () => {
 
                     <td className="py-3.5 px-4">
                       <div className="space-y-1">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                          teacher.employmentStatus === 'PNS' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40' :
-                          teacher.employmentStatus === 'PPPK' ? 'bg-blue-950/60 text-blue-300 border-blue-500/40' :
-                          'bg-amber-950/60 text-amber-300 border-amber-500/40'
-                        }`}>
-                          {teacher.employmentStatus}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                            teacher.employmentStatus === 'PNS' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40' :
+                            teacher.employmentStatus === 'PPPK' ? 'bg-blue-950/60 text-blue-300 border-blue-500/40' :
+                            'bg-amber-950/60 text-amber-300 border-amber-500/40'
+                          }`}>
+                            {teacher.employmentStatus}
+                          </span>
+                          {teacher.activeStatus && teacher.activeStatus !== 'Aktif' ? (
+                            <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                              teacher.activeStatus === 'Pensiun' ? 'bg-purple-950/80 text-purple-300 border-purple-500/50' :
+                              teacher.activeStatus === 'Mutasi' ? 'bg-amber-950/80 text-amber-300 border-amber-500/50' :
+                              'bg-rose-950/80 text-rose-300 border-rose-500/50'
+                            }`}>
+                              {teacher.activeStatus}
+                            </span>
+                          ) : (
+                            <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                              Aktif
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-slate-400">{teacher.gender}</p>
                       </div>
                     </td>
@@ -527,6 +579,23 @@ export const TeacherDatabaseModule: React.FC = () => {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-400 font-medium">Status Keaktifan Pendidik</label>
+                <select
+                  value={formData.activeStatus || 'Aktif'}
+                  onChange={(e) => setFormData({ ...formData, activeStatus: e.target.value as any })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                >
+                  <option value="Aktif">Aktif Mengajar</option>
+                  <option value="Nonaktif">Tidak Aktif</option>
+                  <option value="Pensiun">Purna Tugas (Pensiun)</option>
+                  <option value="Mutasi">Mutasi / Pindah Tugas</option>
+                </select>
+                <p className="text-[10px] text-slate-500">
+                  Guru yang tidak aktif akan disembunyikan otomatis jika kotak "Tampilkan Semua Data" di Pengaturan Profil tidak dicentang.
+                </p>
               </div>
 
               <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">

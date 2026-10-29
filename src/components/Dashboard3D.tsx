@@ -36,14 +36,24 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
     setIsSettingsOpen
   } = useApp();
 
+  // Active personnel calculation for lightweight view mode
+  const activeTeachers = teachers.filter(t => !t.activeStatus || t.activeStatus === 'Aktif');
+  const activeStudents = students.filter(s => !s.activeStatus || s.activeStatus === 'Aktif');
+
+  const displayTeachersCount = schoolProfile?.showInactiveData ? teachers.length : activeTeachers.length;
+  const displayStudentsCount = schoolProfile?.showInactiveData ? students.length : activeStudents.length;
+
+  const relevantTeachers = schoolProfile?.showInactiveData ? teachers : activeTeachers;
+  const relevantStudents = schoolProfile?.showInactiveData ? students : activeStudents;
+
   // Metrics calculations
   const todayTeachersAtt = teacherAttendance.filter(a => a.date === TODAY_STR);
   const teacherPresent = todayTeachersAtt.filter(a => a.status === 'HADIR').length;
-  const teacherPercent = teachers.length > 0 ? Math.round((teacherPresent / teachers.length) * 100) : 0;
+  const teacherPercent = relevantTeachers.length > 0 ? Math.round((teacherPresent / relevantTeachers.length) * 100) : 0;
 
   const todayStudentsAtt = studentAttendance.filter(a => a.date === TODAY_STR);
   const studentPresent = todayStudentsAtt.filter(a => a.status === 'HADIR').length;
-  const studentPercent = students.length > 0 ? Math.round((studentPresent / students.length) * 100) : 0;
+  const studentPercent = relevantStudents.length > 0 ? Math.round((studentPresent / relevantStudents.length) * 100) : 0;
 
   // The 8 Cards: Arranged for 2 icons per row on mobile phones (grid-cols-2)!
   const menuCards: {
@@ -81,7 +91,7 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
       title: 'Absensi Guru',
       subtitle: 'Presensi Pendidik',
       description: 'Pencatatan presensi guru harian (Hadir, Izin, Sakit, Alpa) dengan filter tanggal kalender.',
-      statValue: `${teacherPresent}/${teachers.length} Guru`,
+      statValue: `${teacherPresent}/${displayTeachersCount} Guru`,
       statLabel: 'Hadir hari ini (' + teacherPercent + '%)',
       bgGradient: 'from-blue-600/25 via-indigo-900/40 to-slate-900/95',
       cardBorder: 'border-blue-500/30 hover:border-blue-400',
@@ -95,8 +105,8 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
       title: 'Absensi Siswa',
       subtitle: 'Presensi Kelas',
       description: 'Rekapitulasi kehadiran siswa per rombel/kelas, aksi cepat tandai hadir, dan persentase kehadiran.',
-      statValue: `${studentPresent}/${students.length} Siswa`,
-      statLabel: 'Tercatat hari ini',
+      statValue: `${studentPresent}/${displayStudentsCount} Siswa`,
+      statLabel: `Tercatat hari ini (${studentPercent}%)`,
       bgGradient: 'from-teal-600/25 via-teal-900/40 to-slate-900/95',
       cardBorder: 'border-teal-500/30 hover:border-teal-400',
       glowColor: 'group-hover:shadow-[0_20px_50px_rgba(20,184,166,0.3)]',
@@ -109,8 +119,8 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
       title: 'Database Guru',
       subtitle: 'Master Pendidik',
       description: 'CRUD lengkap biodata pendidik, NIP, mata pelajaran yang diampu, dan status kepegawaian.',
-      statValue: `${teachers.length} Pendidik`,
-      statLabel: 'Aktif mengajar',
+      statValue: `${displayTeachersCount} Pendidik`,
+      statLabel: schoolProfile?.showInactiveData ? `Semua Pendidik (${activeTeachers.length} aktif)` : 'Aktif mengajar (Mode Ringan)',
       bgGradient: 'from-amber-600/25 via-orange-900/40 to-slate-900/95',
       cardBorder: 'border-amber-500/30 hover:border-amber-400',
       glowColor: 'group-hover:shadow-[0_20px_50px_rgba(245,158,11,0.3)]',
@@ -123,8 +133,8 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
       title: 'Database Siswa',
       subtitle: 'Buku Induk Siswa',
       description: 'CRUD master data peserta didik, NISN, NIK, penempatan rombel kelas, dan kontak orang tua.',
-      statValue: `${students.length} Siswa`,
-      statLabel: 'Terdaftar aktif',
+      statValue: `${displayStudentsCount} Siswa`,
+      statLabel: schoolProfile?.showInactiveData ? `Semua Siswa (${activeStudents.length} aktif)` : 'Terdaftar aktif (Mode Ringan)',
       bgGradient: 'from-purple-600/25 via-fuchsia-900/40 to-slate-900/95',
       cardBorder: 'border-purple-500/30 hover:border-purple-400',
       glowColor: 'group-hover:shadow-[0_20px_50px_rgba(168,85,247,0.3)]',
@@ -211,16 +221,32 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
               )}
             </button>
             <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => setIsSettingsOpen(true)}
-                className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer group"
-                title="Klik untuk mengubah Profil Sekolah & Pengaturan"
-              >
-                <School className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
-                <span>{schoolProfile?.schoolName || operator?.schoolName || 'SMP Negeri 1 Cendekia Mandiri'}</span>
-                <span className="text-[9px] bg-indigo-500/30 text-indigo-200 px-1.5 py-0.5 rounded font-normal">Pengaturan Profil</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer group"
+                  title="Klik untuk mengubah Profil Sekolah & Pengaturan"
+                >
+                  <School className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                  <span>{schoolProfile?.schoolName || operator?.schoolName || 'SMP Negeri 1 Cendekia Mandiri'}</span>
+                  <span className="text-[9px] bg-indigo-500/30 text-indigo-200 px-1.5 py-0.5 rounded font-normal">Pengaturan Profil</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border transition cursor-pointer ${
+                    schoolProfile?.showInactiveData
+                      ? 'bg-amber-950/40 border-amber-500/40 text-amber-300 hover:bg-amber-900/50'
+                      : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50'
+                  }`}
+                  title="Klik untuk mengubah opsi Tampilkan Semua Data di Pengaturan Profile"
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${schoolProfile?.showInactiveData ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+                  <span>{schoolProfile?.showInactiveData ? 'Semua Data Terbuka (Arsip)' : 'Mode Ringan: Hanya Data Aktif'}</span>
+                </button>
+              </div>
 
               <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
                 Selamat Bertugas, {operator?.name || 'Operator Pendidikan'}

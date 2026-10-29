@@ -24,7 +24,9 @@ export const StudentAttendanceModule: React.FC = () => {
     studentAttendance, 
     markStudentAttendance, 
     bulkMarkStudents, 
-    setActiveTab 
+    setActiveTab,
+    schoolProfile,
+    setIsSettingsOpen
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
@@ -32,7 +34,12 @@ export const StudentAttendanceModule: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
-  const availableClasses = Array.from(new Set(students.map(s => s.className))).sort();
+  // Filter students based on showInactiveData setting (lightweight mode)
+  const scopedStudents = schoolProfile?.showInactiveData
+    ? students
+    : students.filter(s => !s.activeStatus || s.activeStatus === 'Aktif');
+
+  const availableClasses = Array.from(new Set(scopedStudents.map(s => s.className))).sort();
 
   // Attendance lookup for selected date
   const attMap = new Map(
@@ -41,8 +48,8 @@ export const StudentAttendanceModule: React.FC = () => {
 
   // Filtered by class first for statistics
   const classStudents = selectedClass === 'ALL'
-    ? students
-    : students.filter(s => s.className === selectedClass);
+    ? scopedStudents
+    : scopedStudents.filter(s => s.className === selectedClass);
 
   // Statistics for the filtered scope
   const scopedAttRecords = studentAttendance.filter(a => 
@@ -217,6 +224,28 @@ export const StudentAttendanceModule: React.FC = () => {
               <option value="ALPA" className="bg-slate-900">Alpa</option>
               <option value="UNRECORDED" className="bg-slate-900">Belum Presensi</option>
             </select>
+          </div>
+
+          {/* Active Mode Indicator */}
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-950 border border-slate-800 text-[11px]">
+            {schoolProfile?.showInactiveData ? (
+              <span className="text-amber-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                Semua Siswa (Termasuk Lulus)
+              </span>
+            ) : (
+              <span className="text-teal-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                Hanya Siswa Aktif
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(true)}
+              className="text-[10px] text-slate-400 hover:text-white underline ml-0.5"
+            >
+              (Ubah)
+            </button>
           </div>
         </div>
 

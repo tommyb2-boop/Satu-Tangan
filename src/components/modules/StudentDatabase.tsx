@@ -26,7 +26,7 @@ import { generateStudentTemplate, parseStudentExcel } from '../../utils/excelUti
 import confetti from 'canvas-confetti';
 
 export const StudentDatabaseModule: React.FC = () => {
-  const { students, addStudent, updateStudent, deleteStudent, bulkAddStudents, setActiveTab } = useApp();
+  const { students, addStudent, updateStudent, deleteStudent, bulkAddStudents, setActiveTab, schoolProfile, setIsSettingsOpen } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterClass, setFilterClass] = useState<string>('ALL');
@@ -78,7 +78,13 @@ export const StudentDatabaseModule: React.FC = () => {
 
     if (!matchesSearch) return false;
     if (filterClass !== 'ALL' && s.className !== filterClass) return false;
-    if (filterStatus !== 'ALL' && s.activeStatus !== filterStatus) return false;
+
+    // Filter inactive data based on Profile Setting
+    if (!schoolProfile?.showInactiveData) {
+      if (s.activeStatus && s.activeStatus !== 'Aktif') return false;
+    } else {
+      if (filterStatus !== 'ALL' && s.activeStatus !== filterStatus) return false;
+    }
 
     return true;
   });
@@ -298,18 +304,34 @@ export const StudentDatabaseModule: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-xs">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-transparent text-slate-300 text-xs py-1 focus:outline-none"
-            >
-              <option value="ALL" className="bg-slate-900">Semua Status</option>
-              <option value="Aktif" className="bg-slate-900">Aktif</option>
-              <option value="Lulus" className="bg-slate-900">Lulus</option>
-              <option value="Pindah" className="bg-slate-900">Pindah</option>
-            </select>
-          </div>
+          {schoolProfile?.showInactiveData ? (
+            <div className="flex items-center gap-1.5 bg-amber-950/40 border border-amber-600/40 rounded-xl px-2.5 py-1 text-xs">
+              <span className="text-[10px] text-amber-300 font-semibold">Status:</span>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="bg-transparent text-amber-200 text-xs py-1 focus:outline-none"
+              >
+                <option value="ALL" className="bg-slate-900 text-white">Semua (Termasuk Lulus)</option>
+                <option value="Aktif" className="bg-slate-900 text-white">Aktif Saja</option>
+                <option value="Lulus" className="bg-slate-900 text-white">Lulus (Alumni)</option>
+                <option value="Pindah" className="bg-slate-900 text-white">Pindah</option>
+              </select>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-600/40 rounded-xl px-2.5 py-1 text-xs text-emerald-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-semibold text-[11px]">Hanya Siswa Aktif</span>
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-0.5"
+                title="Buka Pengaturan Profil untuk menampilkan semua data termasuk alumni"
+              >
+                (Ubah)
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="relative min-w-[260px]">

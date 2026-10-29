@@ -24,7 +24,8 @@ export const TeacherAttendanceModule: React.FC = () => {
     teacherAttendance, 
     markTeacherAttendance, 
     bulkMarkTeachers, 
-    setActiveTab 
+    setActiveTab,
+    schoolProfile
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
@@ -36,16 +37,13 @@ export const TeacherAttendanceModule: React.FC = () => {
     teacherAttendance.filter(a => a.date === selectedDate).map(a => [a.teacherId, a])
   );
 
-  // Statistics
-  const todayRecords = teacherAttendance.filter(a => a.date === selectedDate);
-  const hadirCount = todayRecords.filter(a => a.status === 'HADIR').length;
-  const izinCount = todayRecords.filter(a => a.status === 'IZIN').length;
-  const sakitCount = todayRecords.filter(a => a.status === 'SAKIT').length;
-  const alpaCount = todayRecords.filter(a => a.status === 'ALPA').length;
-  const percentage = teachers.length > 0 ? Math.round((hadirCount / teachers.length) * 100) : 0;
-
-  // Filtered teachers list
+  // Filtered teachers list based on active status setting
   const filteredTeachers = teachers.filter(t => {
+    // If showInactiveData is false (default), hide retired/inactive teachers
+    if (!schoolProfile?.showInactiveData) {
+      if (t.activeStatus && t.activeStatus !== 'Aktif') return false;
+    }
+
     const matchesSearch = 
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.nip.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -61,6 +59,18 @@ export const TeacherAttendanceModule: React.FC = () => {
 
     return true;
   });
+
+  // Statistics scoped to active/displayed teachers
+  const scopedTeachers = !schoolProfile?.showInactiveData 
+    ? teachers.filter(t => !t.activeStatus || t.activeStatus === 'Aktif')
+    : teachers;
+
+  const todayRecords = teacherAttendance.filter(a => a.date === selectedDate);
+  const hadirCount = todayRecords.filter(a => a.status === 'HADIR').length;
+  const izinCount = todayRecords.filter(a => a.status === 'IZIN').length;
+  const sakitCount = todayRecords.filter(a => a.status === 'SAKIT').length;
+  const alpaCount = todayRecords.filter(a => a.status === 'ALPA').length;
+  const percentage = scopedTeachers.length > 0 ? Math.round((hadirCount / scopedTeachers.length) * 100) : 0;
 
   const handleMark = (teacherId: string, status: AttendanceStatus) => {
     markTeacherAttendance(teacherId, selectedDate, status);

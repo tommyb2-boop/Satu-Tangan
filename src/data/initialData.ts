@@ -23,7 +23,8 @@ export const INITIAL_SCHOOL_PROFILE: SchoolProfile = {
   headmasterNip: '19780512 200212 1 002',
   letterheadProvince: 'PEMERINTAH DAERAH PROVINSI JAWA BARAT',
   letterheadAgency: 'DINAS PENDIDIKAN & KEBUDAYAAN',
-  logoUrl: OFFICIAL_KEMENDIKBUD_LOGO
+  logoUrl: OFFICIAL_KEMENDIKBUD_LOGO,
+  showInactiveData: false
 };
 
 export const INITIAL_OPERATOR: OperatorUser = {
@@ -108,7 +109,19 @@ export const INITIAL_TEACHERS: Teacher[] = [
     email: 'bayu.w@satutangan.sch.id',
     phone: '0852-3344-5566',
     employmentStatus: 'Honorer',
-    gender: 'Laki-laki'
+    gender: 'Laki-laki',
+    activeStatus: 'Aktif'
+  },
+  {
+    id: 'tch-08',
+    nip: '19610410 198603 1 003',
+    name: 'Drs. H. Mulyadi, M.Pd.',
+    subject: 'Ilmu Pengetahuan Sosial (Purna Tugas)',
+    email: 'mulyadi.purna@satutangan.sch.id',
+    phone: '0811-2233-4455',
+    employmentStatus: 'PNS',
+    gender: 'Laki-laki',
+    activeStatus: 'Pensiun'
   }
 ];
 

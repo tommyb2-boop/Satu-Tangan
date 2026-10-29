@@ -20,6 +20,7 @@ export interface SchoolProfile {
   letterheadProvince: string;
   letterheadAgency: string;
   logoUrl?: string;
+  showInactiveData?: boolean; // Kotak ceklist tampilkan semua data (termasuk tidak aktif / lulus)
 }
 
 export interface OperatorUser {
@@ -46,6 +47,7 @@ export interface Teacher {
   employmentStatus: 'PNS' | 'PPPK' | 'Honorer' | 'Yayasan';
   gender: 'Laki-laki' | 'Perempuan';
   assignedClass?: string;
+  activeStatus?: 'Aktif' | 'Nonaktif' | 'Pensiun' | 'Mutasi';
 }
 
 export interface TeacherAttendance {

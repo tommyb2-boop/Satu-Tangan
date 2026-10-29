@@ -62,7 +62,9 @@ export const FingerprintAttendanceModule: React.FC = () => {
     markTeacherAttendance, 
     markStudentAttendance,
     recordFingerprintAttendance,
-    setActiveTab 
+    setActiveTab,
+    schoolProfile,
+    setIsSettingsOpen
   } = useApp();
 
   // Navigation Subtabs
@@ -228,17 +230,26 @@ export const FingerprintAttendanceModule: React.FC = () => {
     studentAttendance.filter(a => a.date === selectedDate).map(a => [a.studentId, a])
   );
 
-  // Available classes
-  const availableClasses = Array.from(new Set(students.map(s => s.className))).sort();
+  // Scope filters based on showInactiveData setting (lightweight mode)
+  const activeTeachers = schoolProfile?.showInactiveData
+    ? teachers
+    : teachers.filter(t => !t.activeStatus || t.activeStatus === 'Aktif');
+
+  const activeStudents = schoolProfile?.showInactiveData
+    ? students
+    : students.filter(s => !s.activeStatus || s.activeStatus === 'Aktif');
+
+  // Available classes from active students
+  const availableClasses = Array.from(new Set(activeStudents.map(s => s.className))).sort();
 
   // Filtered lists
-  const filteredTeachers = teachers.filter(t => 
+  const filteredTeachers = activeTeachers.filter(t => 
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.nip.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.subject.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredStudents = students
+  const filteredStudents = activeStudents
     .filter(s => (selectedClass === 'ALL' ? true : s.className === selectedClass))
     .filter(s => 
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -246,11 +257,11 @@ export const FingerprintAttendanceModule: React.FC = () => {
     );
 
   // Stats calculation
-  const enrolledTeachersCount = teachers.filter(t => templateByPersonId.has(t.id)).length;
-  const enrolledStudentsCount = students.filter(s => templateByPersonId.has(s.id)).length;
+  const enrolledTeachersCount = activeTeachers.filter(t => templateByPersonId.has(t.id)).length;
+  const enrolledStudentsCount = activeStudents.filter(s => templateByPersonId.has(s.id)).length;
 
   const teacherStats = { hadir: 0, izin: 0, sakit: 0, alpa: 0, belum: 0 };
-  teachers.forEach(t => {
+  activeTeachers.forEach(t => {
     const att = teacherAttMap.get(t.id);
     if (!att) teacherStats.belum++;
     else if (att.status === 'HADIR') teacherStats.hadir++;
@@ -259,7 +270,7 @@ export const FingerprintAttendanceModule: React.FC = () => {
     else if (att.status === 'ALPA') teacherStats.alpa++;
   });
 
-  const currentClassStudents = selectedClass === 'ALL' ? students : students.filter(s => s.className === selectedClass);
+  const currentClassStudents = selectedClass === 'ALL' ? activeStudents : activeStudents.filter(s => s.className === selectedClass);
   const studentStats = { hadir: 0, izin: 0, sakit: 0, alpa: 0, belum: 0 };
   currentClassStudents.forEach(s => {
     const att = studentAttMap.get(s.id);
@@ -822,13 +833,13 @@ export const FingerprintAttendanceModule: React.FC = () => {
                   >
                     <option value="">-- Pilih Nama Orang yang Akan Presensi --</option>
                     {activeRole === 'guru' ? (
-                      teachers.map(t => (
+                      activeTeachers.map(t => (
                         <option key={t.id} value={t.id}>
                           {t.name} (NIP: {t.nip}) {templateByPersonId.has(t.id) ? '✓ Terdaftar' : '⚠️ Belum Merekam'}
                         </option>
                       ))
                     ) : (
-                      students
+                      activeStudents
                         .filter(s => selectedClass === 'ALL' || s.className === selectedClass)
                         .map(s => (
                           <option key={s.id} value={s.id}>
@@ -1305,7 +1316,7 @@ export const FingerprintAttendanceModule: React.FC = () => {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Tenaga Pendidik / Guru ({teachers.length})
+                  Tenaga Pendidik / Guru ({activeTeachers.length})
                 </button>
                 <button
                   onClick={() => setActiveRole('siswa')}
@@ -1315,7 +1326,29 @@ export const FingerprintAttendanceModule: React.FC = () => {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Peserta Didik / Siswa ({students.length})
+                  Peserta Didik / Siswa ({activeStudents.length})
+                </button>
+              </div>
+
+              {/* Active Mode Indicator */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px]">
+                {schoolProfile?.showInactiveData ? (
+                  <span className="text-amber-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    Semua Data Ditampilkan
+                  </span>
+                ) : (
+                  <span className="text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Hanya Data Aktif (Mode Ringan)
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="text-[10px] text-slate-400 hover:text-white underline ml-0.5"
+                >
+                  (Ubah)
                 </button>
               </div>
 

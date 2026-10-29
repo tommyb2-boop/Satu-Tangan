@@ -75,9 +75,18 @@ export const ReportCardModule: React.FC = () => {
     }
   };
 
+  // Candidate students & teachers for new report card generation (respect showInactiveData)
+  const candidateStudentsForNew = schoolProfile?.showInactiveData
+    ? students
+    : students.filter(s => !s.activeStatus || s.activeStatus === 'Aktif');
+
+  const candidateTeachersForNew = schoolProfile?.showInactiveData
+    ? teachers
+    : teachers.filter(t => !t.activeStatus || t.activeStatus === 'Aktif');
+
   // Handler: Bulk Initialize Class with Empty Scores
   const handleBulkInitializeClass = (className: string, academicYear: string, semester: 'Ganjil' | 'Genap') => {
-    const classStudents = students.filter(s => s.className === className);
+    const classStudents = candidateStudentsForNew.filter(s => s.className === className);
     if (classStudents.length === 0) {
       alert(`Tidak ada siswa di kelas ${className}.`);
       return;
@@ -326,8 +335,8 @@ export const ReportCardModule: React.FC = () => {
       {/* SUB-MENU 2: PEMBUATAN RAPORT BARU (TAHUN BERJALAN) */}
       {activeSubTab === 'buat-baru' && (
         <RaportCreateNewTab
-          students={students}
-          teachers={teachers}
+          students={candidateStudentsForNew}
+          teachers={candidateTeachersForNew}
           schoolProfile={schoolProfile}
           onSaveReport={handleSaveReportFromNewTab}
           onBulkInitializeClass={handleBulkInitializeClass}
