@@ -35,7 +35,7 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({
           <div className="flex items-center gap-3">
             <div className="relative w-12 h-12 shrink-0">
               <img
-                src="/pwa-192x192.png"
+                src="/pwa-transparent-192x192.png?v=3"
                 alt="Logo Satu Tangan"
                 className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
               />
