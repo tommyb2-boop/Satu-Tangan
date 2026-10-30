@@ -62,11 +62,11 @@ export const NewDeviceWelcomeModal: React.FC<NewDeviceWelcomeModalProps> = ({
           <div className="flex items-start justify-between gap-3 relative z-10">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 shrink-0">
-                <div className="w-full h-full bg-[#f8f6ee] rounded-[14px] flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center overflow-hidden p-0.5">
                   <img
                     src={APP_LOGO_URL}
                     alt="Logo Satu Tangan"
-                    className="w-full h-full object-cover scale-[1.03]"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </div>

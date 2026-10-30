@@ -39,11 +39,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
               title="Satu Tangan Guru - Beranda Utama"
             >
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-all duration-200 shrink-0">
-                <div className="w-full h-full bg-[#f8f6ee] rounded-[10px] flex items-center justify-center relative overflow-hidden">
+                <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center relative overflow-hidden p-0.5">
                   <img 
                     src={APP_LOGO_URL} 
                     alt="Logo Aplikasi Satu Tangan Guru" 
-                    className="w-full h-full object-cover scale-[1.03]"
+                    className="w-full h-full object-contain"
                     onError={(e) => {
                       (e.currentTarget as HTMLElement).style.display = 'none';
                     }}
