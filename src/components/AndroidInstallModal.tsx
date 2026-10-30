@@ -33,14 +33,12 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({
         {/* Modal Header */}
         <div className="p-5 bg-gradient-to-r from-indigo-950 via-slate-900 to-emerald-950 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 shrink-0">
-              <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center overflow-hidden p-0.5">
-                <img
-                  src="/pwa-192x192.png"
-                  alt="Logo Satu Tangan"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+            <div className="relative w-12 h-12 shrink-0">
+              <img
+                src="/pwa-192x192.png"
+                alt="Logo Satu Tangan"
+                className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">

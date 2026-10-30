@@ -38,18 +38,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenArchitecture }) => {
               className="flex items-center gap-2.5 cursor-pointer group select-none touch-manipulation"
               title="Satu Tangan Guru - Beranda Utama"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-[1.5px] shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-all duration-200 shrink-0">
-                <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center relative overflow-hidden p-0.5">
-                  <img 
-                    src={APP_LOGO_URL} 
-                    alt="Logo Aplikasi Satu Tangan Guru" 
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-slate-900 animate-pulse" />
-                </div>
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10 shrink-0 group-hover:scale-105 transition-transform duration-200">
+                <img 
+                  src={APP_LOGO_URL} 
+                  alt="Logo Aplikasi Satu Tangan Guru" 
+                  className="w-full h-full object-contain filter drop-shadow-[0_2px_8px_rgba(99,102,241,0.45)]"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                  }}
+                />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-slate-900 animate-pulse" />
               </div>
 
               <div>
