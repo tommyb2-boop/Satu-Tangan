@@ -20,6 +20,7 @@ export default defineConfig(() => {
           'pwa-maskable-192x192.png',
           'pwa-maskable-512x512.png',
           'assets/aistudio/logo_cropped.png',
+          'assets/aistudio/app_logo.png',
         ],
         manifest: {
           id: '/',
@@ -27,7 +28,7 @@ export default defineConfig(() => {
           short_name: 'Satu Tangan',
           description: 'Aplikasi terpusat pengolah data siswa, guru, presensi sidik jari & cetak raport praktis.',
           theme_color: '#020617',
-          background_color: '#fcf5eb',
+          background_color: '#020617',
           display: 'standalone',
           orientation: 'any',
           start_url: '/',
