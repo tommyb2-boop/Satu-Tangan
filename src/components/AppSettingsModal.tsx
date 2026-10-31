@@ -540,6 +540,26 @@ export const AppSettingsModal: React.FC = () => {
                         ))}
                       </div>
                     </div>
+
+                    {/* Download Windows Desktop ICO Widget */}
+                    <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                      <div className="flex items-center gap-2.5">
+                        <img src="/satutangan_transparan.png" alt="Icon Satu Tangan" className="w-8 h-8 object-contain shrink-0 filter drop-shadow-[0_2px_6px_rgba(99,102,241,0.4)]" />
+                        <div>
+                          <p className="text-xs font-bold text-white">File Ikon Asli Desktop Windows (.ico)</p>
+                          <p className="text-[10px] text-slate-400">Ganti ikon shortcut desktop Anda agar 100% transparan tanpa kotak putih</p>
+                        </div>
+                      </div>
+                      <a
+                        href="/satutangan.ico"
+                        download="satutangan.ico"
+                        className="w-full sm:w-auto px-3 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition shrink-0 shadow-xs cursor-pointer"
+                        title="Unduh satutangan.ico untuk dipasang ke shortcut desktop Windows"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Unduh File .ICO</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -790,55 +810,6 @@ export const AppSettingsModal: React.FC = () => {
                       className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
-                </div>
-              </div>
-
-              {/* Section 4: Optimasi Database & Filter Status Data */}
-              <div className="space-y-3 pt-4 border-t border-slate-800">
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-emerald-400" />
-                  <h3 className="text-xs uppercase font-extrabold tracking-wider text-slate-300">
-                    4. Optimasi Database & Tampilan Data (Aktif / Arsip)
-                  </h3>
-                </div>
-
-                <div className={`p-4 rounded-2xl border transition-all ${
-                  profileForm.showInactiveData
-                    ? 'bg-amber-950/30 border-amber-500/50 ring-1 ring-amber-500/30'
-                    : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
-                }`}>
-                  <label className="flex items-start gap-3.5 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      id="checkbox-tampilkan-semua-data"
-                      checked={!!profileForm.showInactiveData}
-                      onChange={(e) => setProfileForm({ ...profileForm, showInactiveData: e.target.checked })}
-                      className="w-5 h-5 mt-0.5 rounded-lg text-emerald-600 focus:ring-emerald-500 bg-slate-900 border-slate-700 cursor-pointer accent-emerald-500"
-                    />
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs sm:text-sm font-bold text-white">
-                          Tampilkan Semua Data
-                        </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                          profileForm.showInactiveData
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        }`}>
-                          {profileForm.showInactiveData ? 'Arsip & Nonaktif Ditampilkan' : 'Mode Ringan (Hanya Data Aktif)'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-300 leading-relaxed">
-                        Centang kotak ini untuk menampilkan semua data guru atau siswa yang sudah tidak aktif (misalnya siswa yang sudah <strong>Lulus</strong> / <strong>Pindah</strong>, atau guru yang sudah <strong>Purna Tugas / Pensiun / Tidak Aktif</strong>).
-                      </p>
-                      <p className="text-[10px] text-slate-400 leading-normal flex items-center gap-1.5 pt-0.5">
-                        <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>
-                          Secara default (tidak dicentang), aplikasi hanya menampilkan data yang <strong>Aktif</strong> saja agar pengoperasian aplikasi tetap ringan, cepat, dan rapi seiring berjalannya tahun ajaran.
-                        </span>
-                      </p>
-                    </div>
-                  </label>
                 </div>
               </div>
 

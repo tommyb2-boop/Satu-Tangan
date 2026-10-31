@@ -33,6 +33,7 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
     setActiveTab,
     operator,
     schoolProfile,
+    updateSchoolProfile,
     setIsSettingsOpen
   } = useApp();
 
@@ -197,6 +198,35 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      {/* Baris Atas Beranda: Profil Sekolah di Kiri & Kotak Ceklis Tampilkan Semua Data di Pojok Kanan Atas */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-indigo-300 hover:text-white text-xs font-semibold transition-all cursor-pointer group w-fit"
+          title="Klik untuk membuka Pengaturan Profil Sekolah"
+        >
+          <School className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+          <span>{schoolProfile?.schoolName || operator?.schoolName || 'SMP Negeri 1 Cendekia Mandiri'}</span>
+          <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded font-normal">Profil Sekolah</span>
+        </button>
+
+        {/* Pojok Kanan Atas: Kotak Ceklis & Tulisan "Tampilkan Semua Data" */}
+        <label 
+          htmlFor="checkbox-tampilkan-semua-data"
+          className="inline-flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm font-semibold text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 px-3.5 py-2 rounded-xl shadow-xs transition-colors self-end sm:self-auto"
+        >
+          <input
+            type="checkbox"
+            id="checkbox-tampilkan-semua-data"
+            checked={!!schoolProfile?.showInactiveData}
+            onChange={(e) => updateSchoolProfile({ showInactiveData: e.target.checked })}
+            className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950 border-slate-600 cursor-pointer accent-indigo-600"
+          />
+          <span>Tampilkan Semua Data</span>
+        </label>
+      </div>
+
       {/* Hero Welcome Banner - Clean gradient without clipped blurred layers */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 border border-slate-700/60 shadow-xl">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
@@ -221,33 +251,6 @@ export const Dashboard3D: React.FC<Dashboard3DProps> = ({ onOpenArchitecture }) 
               )}
             </button>
             <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer group"
-                  title="Klik untuk mengubah Profil Sekolah & Pengaturan"
-                >
-                  <School className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
-                  <span>{schoolProfile?.schoolName || operator?.schoolName || 'SMP Negeri 1 Cendekia Mandiri'}</span>
-                  <span className="text-[9px] bg-indigo-500/30 text-indigo-200 px-1.5 py-0.5 rounded font-normal">Pengaturan Profil</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(true)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border transition cursor-pointer ${
-                    schoolProfile?.showInactiveData
-                      ? 'bg-amber-950/40 border-amber-500/40 text-amber-300 hover:bg-amber-900/50'
-                      : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50'
-                  }`}
-                  title="Klik untuk mengubah opsi Tampilkan Semua Data di Pengaturan Profile"
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${schoolProfile?.showInactiveData ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
-                  <span>{schoolProfile?.showInactiveData ? 'Semua Data Terbuka (Arsip)' : 'Mode Ringan: Hanya Data Aktif'}</span>
-                </button>
-              </div>
-
               <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
                 Selamat Bertugas, {operator?.name || 'Operator Pendidikan'}
               </h1>

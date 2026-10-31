@@ -14,6 +14,8 @@ export default defineConfig(() => {
         injectRegister: 'auto',
         includeAssets: [
           'favicon.ico',
+          'satutangan.ico',
+          'satutangan_transparan.png',
           'apple-touch-icon.png',
           'pwa-transparent-512x512.png',
           'pwa-transparent-256x256.png',
@@ -40,7 +42,13 @@ export default defineConfig(() => {
           lang: 'id',
           icons: [
             {
-              src: '/pwa-transparent-512x512.png?v=3',
+              src: '/satutangan.ico?v=4',
+              sizes: '256x256 128x128 64x64 48x48 32x32 16x16',
+              type: 'image/x-icon',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-transparent-512x512.png?v=4',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
