@@ -25,8 +25,6 @@ export default defineConfig(() => {
           'pwa-transparent-32x32.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
-          'assets/aistudio/logo_cropped.png',
-          'assets/aistudio/app_logo.png',
         ],
         manifest: {
           id: '/',
@@ -87,8 +85,12 @@ export default defineConfig(() => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff,woff2}'],
+          globIgnores: ['**/assets/aistudio/**', '**/*.map', 'node_modules/**'],
           cleanupOutdatedCaches: true,
-          navigateFallback: '/index.html',
+          clientsClaim: true,
+          skipWaiting: true,
+          navigateFallback: 'index.html',
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
